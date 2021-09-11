@@ -1,6 +1,6 @@
 # CoreUtil
 ## Purpose 
-This utils mainly to personal use, and it just wraped some other packages. the perpose that is make some functions are easy to use quickly.
+This core mainly to personal use, and it just wraped some other packages. the perpose that is make some functions are easy to use quickly.
 - getTimeStamp
 - getFormatedTime
 - getFakerData
