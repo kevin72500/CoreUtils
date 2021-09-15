@@ -4,6 +4,126 @@ import hashlib
 from faker import Faker
 import time
 import datetime
+import pymysql
+from loguru import logger
+from functools import wraps
+
+def getFromList(input_list=[],list_index=0)
+    if len(input_list)==1:
+        return input_list[0]
+    else:
+        return "wrong num of input_list"
+
+
+#多维数组转单维数组
+singleList = []
+def multi2OneList(mylist):
+    '''
+    mylist: list should be larger than 1 demi
+    '''
+    global singleList
+    for one in mylist:
+        if isinstance(one, list):
+            multi2OneList(one)
+        else:
+            singleList.append(one)
+    return singleList
+
+#简单版本
+
+def multi2Single(*args):
+    ret = []
+    for one in args:
+        ret = ret+one
+    return ret
+
+
+#获取数组维数
+num = 1
+def getDimons(mylist):
+    global num
+    for one in mylist:
+        # print(one)
+        if isinstance(one, list):
+            num = num+1
+            getDimons(one)
+    return num
+
+
+def timeit(func):
+    '''
+        func：funtion name which need calculate time
+    '''
+    @wraps(func)
+    def calculate(*args,**kwargs):
+        start=datetime.now()
+        func(*args,**kwargs)
+        end=datetime.now()
+        logger.info(f"{func.__name__} costs {(end-start).seconds}")
+        return calculate
+
+def singleton(cls):
+    instance = {}
+
+    @wraps(cls)
+    def get_insance(*args, **kwargs):
+        if cls not in instance:
+            instance[cls] = cls(*args, **kwargs)
+        return instance[cls]
+
+    return get_insance
+
+dbInfo={}
+class mysql_exe(object):
+    def __init__(self,host="",user="",password="",port="",db="",charset=""):
+        if host=="":
+            self.conn = pymysql.connect(host=dbInfo['host'],
+                                        user=dbInfo['username'],
+                                        password=dbInfo['password'],
+                                        port=dbInfo['port'],
+                                        db=dbInfo['dbname'],
+                                        charset=dbInfo['charset'])
+            self.cur = self.conn.cursor()
+        self.conn = pymysql.connect(host=host,user=user,password=password,port=int(port),db=db,charset=charset)
+        self.cur = self.conn.cursor()
+
+    def __enter__(self):
+        return self
+
+    def run(self, sql):
+        try:
+            self.cur.execute(sql)
+            self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            logger.error(e)
+
+    def run_with_print(self, sql):
+        try:
+            self.cur.execute(sql)
+            self.conn.commit()
+            data = self.cur.fetchall()
+            for one in data:
+                logger.info(f'database return is : {one}')
+        except Exception as e:
+            self.conn.rollback()
+            logger.error(e)
+
+    def run_with_return(self, sql):
+        try:
+            self.cur.execute(sql)
+            self.conn.commit()
+            data = self.cur.fetchall()
+            return data
+        except Exception as e:
+            self.conn.rollback()
+            logger.error(e)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.cur.close()
+        self.conn.close()
+
+
 
 def getSha1Password(passwdStr,key="terminus2021"):
     '''
