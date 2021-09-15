@@ -8,6 +8,48 @@ import pymysql
 from loguru import logger
 from functools import wraps
 
+def getFromList(input_list=[],list_index=0)
+    if len(input_list)==1:
+        return input_list[0]
+    else:
+        return "wrong num of input_list"
+
+
+#多维数组转单维数组
+singleList = []
+def multi2OneList(mylist):
+    '''
+    mylist: list should be larger than 1 demi
+    '''
+    global singleList
+    for one in mylist:
+        if isinstance(one, list):
+            multi2OneList(one)
+        else:
+            singleList.append(one)
+    return singleList
+
+#简单版本
+
+def multi2Single(*args):
+    ret = []
+    for one in args:
+        ret = ret+one
+    return ret
+
+
+#获取数组维数
+num = 1
+def getDimons(mylist):
+    global num
+    for one in mylist:
+        # print(one)
+        if isinstance(one, list):
+            num = num+1
+            getDimons(one)
+    return num
+
+
 def timeit(func):
     '''
         func：funtion name which need calculate time
