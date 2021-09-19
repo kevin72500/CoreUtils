@@ -4,6 +4,7 @@ setup.cfg
 setup.py
 core/__init__.py
 core/utils.py
+core/xmind2excel.py
 khandytool.egg-info/PKG-INFO
 khandytool.egg-info/SOURCES.txt
 khandytool.egg-info/dependency_links.txt

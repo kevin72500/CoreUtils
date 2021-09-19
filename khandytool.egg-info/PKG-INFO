@@ -6,25 +6,22 @@ Home-page: https://github.com/kevin72500/khandytool
 Author: Ou Peng
 Author-email: kevin72500@qq.com
 License: UNKNOWN
+Description: # CoreUtil
+        ## Purpose 
+        This core mainly to personal use, and it just wraped some other packages. the perpose that is make some functions are easy to use quickly.
+        - getTimeStamp
+        - getFormatedTime
+        - getFakerData
+        - multiDimArrayTransfer2SingleDim
+        - getSha1Password
+        - getToken
+        - Download example
+        - dataFram example
+        - crotine example
+        
+        
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
-License-File: LICENSE
-
-# CoreUtil
-## Purpose 
-This core mainly to personal use, and it just wraped some other packages. the perpose that is make some functions are easy to use quickly.
-- getTimeStamp
-- getFormatedTime
-- getFakerData
-- multiDimArrayTransfer2SingleDim
-- getSha1Password
-- getToken
-- Download example
-- dataFram example
-- crotine example
-
-
-
