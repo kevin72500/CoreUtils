@@ -1,0 +1,3 @@
+flag,host,port,user,passwd,execCommand,execCommandExpect,dockerCommand,checkCommand,exepect
+true,localhost,22,<name>,<passwd>,"blade create cpu load --cpu-percent 20","success","","top -b -n 1|grep Cpu|awk '{print $2}'",18
+true,localhost,22,<name>,<passwd>,"","success","blade create docker cpu fullload --cpu-percent 80 --blade-tar-file /opt/chaosblade-1.2.0.tar.gz --container-id 5239e26f6329","top -b -n 1|grep Cpu|awk '{print $2}'",18
