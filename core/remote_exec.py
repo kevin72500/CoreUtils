@@ -265,6 +265,18 @@ class RemoteRunner(object):
     #         print("#"*20)
     #     return object.__getattribute__(self, *args, **kwargs)
 
+def requestStringParser(url_str,loginRequire="no",checkResponse="no"):
+    '''
+     url_str=http://mobile.abc.org/sfsf~post~urlparams~jsonparms
+    '''
+    url,method,params,jsonstr=url_str.split('~')
+    logger.info(f'url is {url}')
+    logger.info(f'method is {method}')
+    logger.info(f'params is {params}')
+    logger.info(f'jsonstr is {jsonstr}')
+
+
+
 def blade_run():
     logger.info(f'--' * 100)
     f = open("data.csv")
@@ -324,6 +336,7 @@ def blade_run():
         logger.info(f'+++++++Executing Done+++++++\n\n\n')
 
 if __name__ == "__main__":
-    blade_run()
+    # blade_run()
+    requestStringParser("http://mobile.abc.org/sfsf~post~urlparams~jsonparms")
 
 
