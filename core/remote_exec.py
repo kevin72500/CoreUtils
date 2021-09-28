@@ -1,4 +1,3 @@
-
 #!/anaconda3/envs/xxx/bin python3.7
 # -*- coding: utf-8 -*-
 # ---
@@ -16,6 +15,7 @@ from requests import session
 from copy import deepcopy
 import csv
 logger.add('执行日志.txt',rotation="10MB",encoding='utf-8',enqueue=True)
+import pytest
 
 class RemoteRunner(object):
     '''
@@ -118,10 +118,11 @@ class RemoteRunner(object):
         self.exec_cmd(cmd)
         stdout = self.res.stdout.strip()
         logger.info(f"checking: result is: {stdout}, expect is: {expect}")
-        if expect in stdout:
-            return True
-        else:
-            return False
+        assert expect in stdout
+        # if expect in stdout:
+        #     return True
+        # else:
+        #     return False
 
     def exec_check_contain(self,expect):
         '''
@@ -130,11 +131,12 @@ class RemoteRunner(object):
         '''
         stdout=self.res.stdout.strip()
         logger.info(f"checking: result is: {stdout}, expect is: {expect}")
-        if expect in stdout:
-            # logger.info(f"expect: {expect}")
-            # logger.info(f"stdout: {stdout}")
-            return True
-        return False
+        assert expect in stdout
+        # if expect in stdout:
+        #     # logger.info(f"expect: {expect}")
+        #     # logger.info(f"stdout: {stdout}")
+        #     return True
+        # return False
 
     def exec_check_equal(self,expect):
         '''
@@ -144,11 +146,12 @@ class RemoteRunner(object):
         '''
         stdout=self.res.stdout.strip()
         logger.info(f"checking: result is: {stdout}, expect is: {expect}")
-        if expect == stdout:
-            # logger.info(f"expect: {expect}")
-            # logger.info(f"stdout: {stdout}")
-            return True
-        return False
+        assert expect==stdout
+        # if expect == stdout:
+        #     # logger.info(f"expect: {expect}")
+        #     # logger.info(f"stdout: {stdout}")
+        #     return True
+        # return False
 
     def exec_check_request_alive(self,url,method,data="",json="",*kwargs):
         '''
@@ -165,10 +168,11 @@ class RemoteRunner(object):
             resp = session().post(url, data, json)
         elif method.lower() == 'get':
             resp = session().post(url, data, json)
-        if resp.status_code==200:
-            return True
-        else:
-            return False
+        assert resp.status_code==200
+        # if resp.status_code==200:
+        #     return True
+        # else:
+        #     return False
 
 
     def exec_check_request_response(self,url,method,data="",json="",expect="",*kwargs):
@@ -187,10 +191,11 @@ class RemoteRunner(object):
             resp = session().post(url, data, json)
         elif method.lower() == 'get':
             resp = session().post(url, data, json)
-        if expect in resp.text:
-            return True
-        else:
-            return False
+        assert expect in resp.text 
+        # if expect in resp.text:
+        #     return True
+        # else:
+        #     return False
 
     def prepare_blade(self):
         '''
@@ -267,19 +272,61 @@ class RemoteRunner(object):
 
 def requestStringParser(url_str,loginRequire="no",checkResponse="no"):
     '''
-     url_str=http://mobile.abc.org/sfsf~post~urlparams~jsonparms
+     url_str=http://mobile.abc.org/sfsf~post~urlparams~jsonparms~headers
+     http://http://192.168.118.168:21368/api-dev/terminus-security/account/login~post~ ~{"loginName":"$loginName","password":"$loginPass","businessCode":"terminus","loginType":"ACCOUNT","ticket":"7c9db59cdc189b5d56ba21bf20e355fcc30c0049","rightCode":"dfdf"}~{"Content-Type": "application/json;charset=UTF-8"}
     '''
-    url,method,params,jsonstr=url_str.split('~')
+    url,method,params,jsonstr,headers=url_str.split('~')
     logger.info(f'url is {url}')
     logger.info(f'method is {method}')
     logger.info(f'params is {params}')
     logger.info(f'jsonstr is {jsonstr}')
+    logger.info(f'headers is {headers}')
+    requestFuncStr=f"session().{method}(url='{url}',data={params},json={jsonstr})"
+    session().request(url=url,method=method,params=params,data=jsonstr,headers=json.loads(headers))
+    print(requestFuncStr)
 
+def running():
+    logger.info(f'--' * 100)
+    f=open("config2.json",encoding='utf-8')
+    jf=json.load(f)
+    for one in jf['data']:
+        # print(one)
+    # f = open("cmdCase.csv")
+    # for one in csv.DictReader(f):
+        logger.info(f'@@@data is@@@\n:{one}')
+        if one['flag'] == "true":
+            logger.info(f'+++++++Executing is+++++++ \n:{one}')
+            if one['httpCheck'] == "":
+                if one['dockerName'] != "":
+                    r = RemoteRunner(host=one['host'], port=int(one['port']), user=one['user'], passwd=one['passwd'])
+                    r.run_docker_cmd_by_dockerName(one['execCommand'], one['dockerName']).exec_check_contain(
+                        one['execCommandExpect'])
+                    time.sleep(2)
+                    r.exec_check_by_cmd(one['checkCommand'], one['exepect'])
+                    time.sleep(10)
+                    r.destroy_chaos()
+                else:
+                    if "docker" in one['execCommand']:
+                        r = RemoteRunner(host=one['host'], port=int(one['port']), user=one['user'],
+                                         passwd=one['passwd'])
+                        r.run_docker_cmd(one['execCommand']).exec_check_contain(one['execCommandExpect'])
+                        time.sleep(2)
+                        r.exec_check_by_cmd(one['checkCommand'], one['exepect'])
+                        time.sleep(10)
+                        r.destroy_chaos()
+                    else:
+                        r = RemoteRunner(host=one['host'], port=int(one['port']), user=one['user'],
+                                         passwd=one['passwd'])
+                        r.exec_cmd(one['execCommand']).exec_check_contain(one['execCommandExpect'])
+                        time.sleep(2)
+                        r.exec_check_by_cmd(one['checkCommand'], one['exepect'])
+                        time.sleep(10)
+                        r.destroy_chaos()
 
 
 def blade_run():
     logger.info(f'--' * 100)
-    f = open("data.csv")
+    f = open("cmdCase.csv")
     for one in csv.DictReader(f):
         logger.info(f'@@@data is@@@\n:{one}')
         if one['flag'] == "true":
@@ -337,6 +384,5 @@ def blade_run():
 
 if __name__ == "__main__":
     # blade_run()
-    requestStringParser("http://mobile.abc.org/sfsf~post~urlparams~jsonparms")
-
-
+    # requestStringParser('http://192.168.118.168:xxx/api-dev/terminus-security/account/login~post~ ~{"loginName":"admin","password":"admin","businessCode":"xxx","loginType":"ACCOUNT","ticket":"7c9db59cdc189b5d56ba21bf20e355fsssssss","rightCode":"ssssss"}~{"Content-Type": "application/json;charset=UTF-8"}')
+    running()

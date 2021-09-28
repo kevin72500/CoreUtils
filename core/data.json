@@ -1,0 +1,49 @@
+{
+    "data":[
+      {
+        "description": "检查cpu利用率大于80%",
+        "flag":"true",
+        "host":"192.168.118.178",
+        "port": 22,
+        "user":"root",
+        "passwd": "root",
+        "execCommand":"blade create cpu load --cpu-percent 80",
+        "execCommandExpect": "success",
+        "dockerName": "",
+        "checkCommand": "top -b -n 1|grep Cpu|awk '{print $2}'",
+        "expect": "70",
+        "httpCheck": "",
+        "httpExpect": ""
+      },
+            {
+        "description": "检查docker中CPU大于80%",
+        "flag":"true",
+        "host":"192.168.118.178",
+        "port": 22,
+        "user":"root",
+        "passwd": "root",
+        "execCommand":"blade create docker cpu fullload --cpu-percent 80 --blade-tar-file /opt/chaosblade.tar.gz",
+        "execCommandExpect": "success",
+        "dockerName": "test_mysql",
+        "checkCommand": "docker stats --no-stream",
+        "expect": "mysql",
+        "httpCheck": "",
+        "httpExpect": ""
+      },
+      {
+        "description": "检查进程被杀掉后，服务是否可用",
+        "flag":"true",
+        "host":"192.168.118.178",
+        "port": 22,
+        "user":"root",
+        "passwd": "root",
+        "execCommand":"blade create process kill --process SimpleHTTPServer",
+        "execCommandExpect": "success",
+        "dockerName": "test_mysql",
+        "checkCommand": "docker stats --no-stream",
+        "expect": "mysql",
+        "httpCheck": "http://192.168.118.168:xxxxx/api-dev/terminus-security/account/login~post~ ~{\"loginName\":\"$loginName\",\"password\":\"$loginPass\",\"businessCode\":\"xxxxxx\",\"loginType\":\"ACCOUNT\",\"ticket\":\"7c9db59cdc189b5d56ba21bf20e355fcc30ssssss\",\"rightCode\":\"sssss\"}~{\"Content-Type\": \"application/json;charset=UTF-8\"}",
+        "httpExpect": "abc"
+      }
+    ]
+}
