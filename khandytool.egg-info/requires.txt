@@ -3,5 +3,5 @@ jmespath==0.9.5
 loguru==0.4.1
 pymysql==1.0.2
 xmindparser==1.0.9
-openpyxl==3.0.8
+openpyxl==3.0.9
 pytest==6.2.5
