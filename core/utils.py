@@ -296,7 +296,7 @@ class CFacker():
         fake = Faker(locale=local)
         str1=""
         for k,v in cls.__dict__.items():
-            if name==v:
+            if name==k:
                 # print(v)
                 if len(args) != 0:
                     str1 = "fake.{}({})".format(k, *args)
