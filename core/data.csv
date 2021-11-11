@@ -1,3 +1,0 @@
-flag,host,port,user,passwd,execCommand,execCommandExpect,dockerName,checkCommand,exepect,httpCheck,httpExpect
-true,192.168.118.178,22,<username>,<password>,"blade create cpu load --cpu-percent 80","success","","top -b -n 1|grep Cpu|awk '{print $2}'",70,"",""
-true,192.168.118.178,22,<username>,<password>,"blade create docker cpu fullload --cpu-percent 80 --blade-tar-file /opt/chaosblade.tar.gz","success","test_mysql","docker stats --no-stream",mysql,"",""
