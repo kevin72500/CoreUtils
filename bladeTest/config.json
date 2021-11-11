@@ -1,0 +1,105 @@
+{
+    "data":[
+      {
+        "description": "主机网络限制延迟查看接口响应",
+        "flag":"true",
+        "type": "docker",
+        "host":"192.168.xxxx.xxx",
+        "port": 22,
+        "user":"root",
+        "passwd": "xxxxxx",
+        "execCommand":"blade create network delay --time 1000 --interface eth0 --local-port 18086",
+        "execCommandExpect": "success",
+        "dockerName": "",
+        "checkCommand": "",
+        "checkExpect": "",
+        "httpCheckCommand": {
+          "url":"http://192.168.xxxx.xxx:18086/query",
+          "method":"POST",
+          "header":{},
+          "cookie":{},
+          "params":{"q":"show databases"},
+          "json":{}
+        },
+        "httpExpect": "results"
+      },
+      {
+        "description": "检查主机cpu利用率大于80%",
+        "flag":"true",
+        "type": "host",
+        "host":"192.168.xxxx.xxx",
+        "port": 22,
+        "user":"root",
+        "passwd": "tslsmart",
+        "execCommand":"blade create cpu load --cpu-percent 80",
+        "execCommandExpect": "success",
+        "dockerName": "",
+        "checkCommand": "top -b -n 1|grep Cpu|awk '{print $2}'",
+        "checkExpect": "70",
+        "httpCheckCommand": "",
+        "httpExpect": ""
+      },
+            {
+        "description": "检查docker中CPU大于80%",
+        "flag":"false",
+        "type": "docker",
+        "host":"192.168.xxxx.xxx",
+        "port": 22,
+        "user":"root",
+        "passwd": "xxxxxx",
+        "execCommand":"blade create docker cpu fullload --cpu-percent 80 --blade-tar-file /opt/chaosblade.tar.gz",
+        "execCommandExpect": "success",
+        "dockerName": "test_mysql",
+        "checkCommand": "docker stats --no-stream",
+        "checkExpect": "mysql",
+        "httpCheckCommand": "",
+        "httpExpect": ""
+      },
+      {
+        "description": "检查influxd进程被杀掉后，服务是否可用",
+        "flag":"false",
+        "type": "docker",
+        "host":"192.168.xxxx.xxx",
+        "port": 22,
+        "user":"root",
+        "passwd": "xxxxxx",
+        "execCommand":"blade create docker process kill --process influxd --blade-tar-file /opt/chaosblade.tar.gz",
+        "execCommandExpect": "success",
+        "dockerName": "influxdb",
+        "checkCommand": "",
+        "checkExpect": "",
+        "httpCheckCommand": {
+          "url":"http://192.168.xxxx.xxx:18086/query",
+          "method":"POST",
+          "header":{},
+          "cookie":{},
+          "params":{"q":"show databases"},
+          "json":{}
+        },
+        "httpExpect": "walking dead"
+      },
+      {
+        "description": "docker网络限制延迟查看接口响应",
+        "flag":"true",
+        "type": "docker",
+        "host":"192.168.xxxx.xxx",
+        "port": 22,
+        "user":"root",
+        "passwd": "xxxxxx",
+        "execCommand":"blade create docker network delay --time 1000 --interface eth0 --local-port 8086",
+        "execCommandExpect": "success",
+        "dockerName": "influxdb",
+        "checkCommand": "",
+        "checkExpect": "",
+        "httpCheckCommand": {
+          "url":"http://192.168.xxxx.xxx:18086/query",
+          "method":"POST",
+          "header":{},
+          "cookie":{},
+          "params":{"q":"show databases"},
+          "json":{}
+        },
+        "httpExpect": "walking dead"
+      }
+    ]
+}
