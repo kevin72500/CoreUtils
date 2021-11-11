@@ -2,7 +2,6 @@ README.md
 setup.cfg
 setup.py
 core/__init__.py
-core/remote_exec.py
 core/utils.py
 core/xmind2excel.py
 khandytool.egg-info/PKG-INFO

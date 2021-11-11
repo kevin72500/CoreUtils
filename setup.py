@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="khandytool",
-    version="0.1.3",
+    version="0.1.7",
     author="Ou Peng",
     author_email="kevin72500@qq.com",
     description="khandytool, handy core in testing",
@@ -16,8 +16,7 @@ setuptools.setup(
     install_requires=['faker==8.12.1','jmespath==0.9.5','loguru==0.4.1','pymysql==1.0.2','xmindparser==1.0.9','openpyxl==3.0.9','pytest==6.2.5','fabric==2.6.0','pywebio==1.4.0','requests==2.26.0','jinja2==3.0.2'],
     entry_points={
         'console_scripts': [
-            'khandytool=khandytool:core',
-            'khandytool=khandytool:bladeTest'
+            'khandytool=khandytool:core'
         ],
     },
     classifiers=(

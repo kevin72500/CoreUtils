@@ -21,11 +21,11 @@ import traceback
 from jinja2 import Environment, FileSystemLoader
 
 
-class setEnvs():
-    f=open('.env','r')
-    for one in f.readlines():
-        k,v=one.split('=')
-        os.environ[k]=v
+# class setEnvs():
+#     f=open('.env','r')
+#     for one in f.readlines():
+#         k,v=one.split('=')
+#         os.environ[k]=v
 
 
 class RunnerResult(object):
@@ -332,7 +332,7 @@ class RemoteRunner(object):
 
 
 
-def running(wait=1,jf=json.load(open("config.json",encoding='utf-8'))):
+def running(wait=1,jf=None):
     
     resList=[]
     # logger.info(f'\n' * 5)
@@ -476,4 +476,4 @@ def generateHtmlReport(resList):
 
 
 if __name__ == "__main__":
-    generateHtmlReport(running())
+    generateHtmlReport(running(jf=json.load(open("config.json",encoding='utf-8'))))
