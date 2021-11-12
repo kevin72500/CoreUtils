@@ -8,7 +8,7 @@ import pymysql
 from loguru import logger
 from functools import wraps
 
-def getFromList(input_list=[],list_index=0)
+def getFromList(input_list=[],list_index=0):
     if len(input_list)==1:
         return input_list[0]
     else:
