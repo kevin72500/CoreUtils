@@ -8,6 +8,17 @@ import json
 from xmind2excel import makeCase
 
 
+def app():
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)"])
+
+    if select_type=="xmind转excel":
+        uploadXmind()
+    elif select_type=="混沌测试-交互式":
+        oneCheck()
+    elif select_type=="混沌测试-直接输入(推荐)":
+        onePageInput()
+
+
 def uploadXmind():
     # Upload a file and save to server      
     img = open('xmindStructure.jpg', 'rb').read()  
@@ -335,7 +346,7 @@ def runAndGetReport(input_data):
 
 
 if __name__ == '__main__':
-    start_server(uploadXmind, port=8080)
+    start_server(app, port=8080)
 
 
 
