@@ -7,7 +7,7 @@ from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code
 from pywebio import start_server
-from main import RemoteRunner,generateHtmlReport,running
+from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 import json
 from core.xmind2excel import makeCase
 
