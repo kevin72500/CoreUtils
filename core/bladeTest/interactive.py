@@ -1,11 +1,15 @@
+import sys
+import os,time
+# print("###"+os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))))
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())))) 
+
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code
 from pywebio import start_server
-import os,time
 from main import RemoteRunner,generateHtmlReport,running
 import json
-from xmind2excel import makeCase
+from core.xmind2excel import makeCase
 
 
 def app():
