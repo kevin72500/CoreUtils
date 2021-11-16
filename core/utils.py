@@ -404,3 +404,14 @@ def makeCase(xmindPath,excelName):
                 ws.cell(row,index+1,value=value)
         row=row+1
     wb.save(excelName)   
+
+
+def swagger2jmeter(url='http://192.168.118.168:12812/space/v2/api-docs'):
+    from swaggerjmx.convert import conversion
+    from swaggerjmx.settings import Settings as ST
+    #  swagger_url
+    ST.swagger_url = url
+    #  report_path
+    ST.report_path = 'jmx'
+    # 开始转换
+    conversion()
