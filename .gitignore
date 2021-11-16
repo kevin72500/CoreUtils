@@ -1,3 +1,4 @@
 执行日志.txt
 core/执行日志.txt
-.env
+*.env
+*.pyc
