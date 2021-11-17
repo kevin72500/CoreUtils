@@ -124,18 +124,18 @@ def onePageInput():
     "data":[
       {
         "description": "主机网络限制延迟查看接口响应",
-        "flag":"true",
-        "type": "docker",
+        "flag":"true", 是否运行
+        "type": "docker", 类型是host 或者 docker
         "host":"192.168.xxxx.xxx",
         "port": 22,
         "user":"root",
         "passwd": "xxxxxx",
-        "execCommand":"blade create network delay --time 1000 --interface eth0 --local-port 18086",
-        "execCommandExpect": "success",
-        "dockerName": "",
-        "checkCommand": "",
-        "checkExpect": "",
-        "httpCheckCommand": {
+        "execCommand":"blade create network delay --time 1000 --interface eth0 --local-port 18086", 需要执行的命令
+        "execCommandExpect": "success", 通常为success，可以不用改
+        "dockerName": "",  如果是docker需要知道docker名称，一定要是唯一标识
+        "checkCommand": "", 执行命令后的检查命令，比如CPU是否达到 70%
+        "checkExpect": "", 检查的期望值
+        "httpCheckCommand": { 通过http的方式进行检查，以及发送的内容，目前不支持需要登录的方式，建议手动添加token到header
           "url":"http://192.168.xxxx.xxx:18086/query",
           "method":"POST",
           "header":{},
@@ -143,7 +143,7 @@ def onePageInput():
           "params":{"q":"show databases"},
           "json":{}
         },
-        "httpExpect": "results"
+        "httpExpect": "results" http检查值的返回
       },{}]}''',code={
             'mode': "json",
             'theme': 'darcula'
