@@ -10,10 +10,11 @@ from pywebio import start_server
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 import json
 from core.xmind2excel import makeCase
+from core.utils import swagger2jmeter
 
 
 def app():
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)"])
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -21,6 +22,15 @@ def app():
         oneCheck()
     elif select_type=="混沌测试-直接输入(推荐)":
         onePageInput()
+    elif select_type=="swagger地址转换jmeter脚本":
+        jmeterScriptGen()
+
+
+def jmeterScriptGen():
+    url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
+    # print(url)
+    location=swagger2jmeter(url)
+    put_file(content=open(location,mode="rb").read(),name=location.split(os.sep)[-1],label="点击下载jmeter脚本")
 
 
 def uploadXmind():
@@ -350,7 +360,7 @@ def runAndGetReport(input_data):
 
 
 if __name__ == '__main__':
-    start_server(app, port=8080)
+    start_server(jmeterScriptGen, port=8080)
 
 
 

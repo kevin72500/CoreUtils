@@ -7,6 +7,7 @@ import datetime
 import pymysql
 from loguru import logger
 from functools import wraps
+import os
 
 def getFromList(input_list=[],list_index=0):
     if len(input_list)==1:
@@ -406,12 +407,26 @@ def makeCase(xmindPath,excelName):
     wb.save(excelName)   
 
 
-def swagger2jmeter(url='http://192.168.118.168:12812/space/v2/api-docs'):
+def swagger2jmeter(url):
     from swaggerjmx.convert import conversion
     from swaggerjmx.settings import Settings as ST
+    import traceback
     #  swagger_url
-    ST.swagger_url = url
-    #  report_path
-    ST.report_path = 'jmx'
-    # 开始转换
-    conversion()
+    try:
+        ST.swagger_url = url
+        #  report_path
+        ST.report_path = 'jmx'
+        # 开始转换
+        conversion()
+        # print(os.path.abspath(os.path.dirname(__file__))+os.sep+'jmx'+os.sep)
+        upperDir=os.path.abspath(os.path.dirname(__file__))+os.sep+'jmx'+os.sep
+        for x,y,z in os.walk(os.path.abspath(os.path.dirname(__file__))+os.sep+'jmx'+os.sep):
+            return upperDir+"".join(z)
+    except Exception as e:
+        print(traceback.format_exc())
+        return "switch to jmeter script error"
+
+
+if __name__=='__main__':
+    print(swagger2jmeter("http://192.168.118.168:12812/space/v2/api-docs"))
+    
