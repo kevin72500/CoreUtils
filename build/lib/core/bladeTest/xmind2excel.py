@@ -8,7 +8,7 @@ def xmind2List(file_path):
     try:
         xmind_origin = xmind_to_dict(file_path)
         source=xmind_origin[0]['topic']['topics']
-        # print("*"*50+f'\n{source}\n'+"*"*50)
+        print("*"*50+f'\n{source}\n'+"*"*50)
         temp_list=[]
         all_list=[]
 
@@ -59,4 +59,4 @@ def makeCase(xmindPath,excelName):
         print(traceback.format_exc())
                     
 if __name__=='__main__':
-    makeCase(xmindPath="./test/测试xmind.xmind",excelName='./test/测试.xlsx')
+    makeCase(xmindPath="C:\\Users\\gktsl124\\Documents\\GitHub\\testassertstore\\项目\\空间管理\\version xxxx\测试用例\\空间管理.xmind",excelName='测试.xlsx')

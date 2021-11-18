@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="khandytool",
-    version="0.1.7",
+    version="0.1.8",
     author="Ou Peng",
     author_email="kevin72500@qq.com",
     description="khandytool, handy core in testing",

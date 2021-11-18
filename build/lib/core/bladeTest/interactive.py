@@ -361,9 +361,6 @@ def runAndGetReport(input_data):
 def runToolAsServer(portNum):
     start_server(app, port=portNum)
 
-
-
-
 if __name__ == '__main__':
     start_server(app, port=8080)
 
