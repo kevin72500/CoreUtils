@@ -11,10 +11,11 @@ from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 import json
 from core.xmind2excel import makeCase
 from core.utils import swagger2jmeter,CFacker
+import decimal
 
 
 def app():
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本"])
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -24,6 +25,8 @@ def app():
         onePageInput()
     elif select_type=="swagger地址转换jmeter脚本":
         jmeterScriptGen()
+    elif select_type=="假数据构造":
+        myFackData()
 
 
 def jmeterScriptGen():
@@ -361,6 +364,14 @@ def runAndGetReport(input_data):
 def runToolAsServer(portNum):
     start_server(app, port=portNum)
 
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        super(DecimalEncoder, self).default(o)
+
+
 def myFackData():
     all_options={
     "city_suffix":"市，县",
@@ -505,13 +516,15 @@ def myFackData():
     for one in choose:
         funcName=list(all_options.keys())[list(all_options.values()).index(one)]
         restDict[one]=CFacker().get_it(funcName)
-    put_code(restDict, language='json',rows=20) 
+    
+    # put_text(restDict)
+    put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
 
 
 
 if __name__ == '__main__':
-    # start_server(app, port=8080)
-    myFackData()
+    start_server(app, port=8080)
+    # myFackData()
     
 
 
