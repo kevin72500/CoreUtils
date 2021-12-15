@@ -1,11 +1,13 @@
-import time,datetime
-import os,json
-import logging
+import datetime
+import json
 import threading
 from kafka import KafkaConsumer,KafkaProducer
 from kafka.client_async import KafkaClient
 import jmespath
+import threading
+from loguru import logger
 
+logger.add('kafkaUtil_log.txt',encoding='utf-8')
 
 class kafkaOper(object):
     def __init__(self,topic,bootstrapserver):
@@ -18,31 +20,48 @@ class kafkaOper(object):
     def getProducer(self,clientid="kafkaOper"):
         self.kafkaConnection=KafkaProducer(bootstrap_servers=self.bootstrapserver,client_id=clientid)
         return self
-    def doFileterFromComsumer(self,jmeshPath,matchStr,store=False):
-        '''
-            :param keyStr: search patten
-            :param businessData: total data
-            :return: key or key list
-        '''
+    def doFileterFromComsumer(self,jmeshPath="",regMatchString="",matchStr="",keepListen=False,store=False):
         print('Start filter....')
         resStore=[]
         for one in self.kafkaConnection:
             # print(one.value.decode())
             businessData = json.loads(one.value.decode())
-            flag=jmespath.search(jmeshPath,businessData)
-            # print(flag)
-            if flag==matchStr:
-                # if store==True:
-                #     resStore.append(one.value.decode())
-                #     print(one.value.decode())
-                print(f'结果匹配到了: {matchStr}')
-                print(one.value.decode())
+            if regMatchString!="" and jmeshPath!="":
+                logger.error("can't using both jsonPath and regx filter in the same time")
+                return False
+            try:
+                # print(flag)
+                if jmeshPath!="":
+                    flag=jmespath.search(jmeshPath,businessData)
+                    if flag==matchStr:
+                        logger.warning(f'Topic: {self.topic} 在时间：{datetime.datetime.now()}->结果匹配到: {matchStr}了')
+                        logger.info(f'{one.value.decode()}')
+                else:
+                    logger.info(f'{one.value.decode()}')
+            except Exception as e:
+                logger.error('json 解析失败')
+                logger.error(f'{one.value.decode()}')
     def doSendFromProducer(self,message,partition=None,key=None):
         self.kafkaConnection.send(self.topic,value=bytes(message,encoding='utf-8'),partition=partition,key=key)
 
+
+def general_monitor(topic="",serverAndPort="localhost:9092",pattern="",key=""):
+    kafkaOper(topic,serverAndPort).getConsumer().doFileterFromComsumer(pattern,key)
+
+def multi_topic_listener(topicList=[],serverAndPortList=[],patternList=[],keyList=[]):
+    threadList=[]
+    for one in zip(topicList,serverAndPortList,patternList,keyList):
+        (a,b,c,d)=one
+        # print(f"{a},{b},{c},{d}")
+        threadList.append(threading.Thread(target=general_monitor,args=(a,b,c,d)))
+    for one in threadList:
+        one.start()
+        one.join()
+
+
 if __name__ == '__main__':
-    # start_consumer("device_default_prop","192.168.125.149:9092")
-    # start_consumer()
-    # kafkaOper("iotHub","192.168.125.149:9092").getConsumer().doFileterFromComsumer("payload.name","status")
-    msg='{"messageId":"18db3242-18ff-4c62-958a-321457ca9211","payload":{"name":"onff","timestamp":"1639017000529","alias":"在离线状态","items":[{"keyName":"onff","value":"Offline","alias":"在线"}],"virDevUid":"908287192640741398"},"timestamp":"1639017000529"}'
-    kafkaOper("device_default_state","192.168.125.149:9092").getProducer().doSendFromProducer(msg)
+    # multi_topic_listener(topicList=['topic','topic1','topic2'],serverAndPortList=["ip:port","ip:port","ip:port"]
+    # ,patternList=["json.data.id","json.data.id","json.data.id"],keyList=["assertingData1","assertingData2","assertingData3"])
+
+
+    multi_topic_listener(topicList=['topic',],serverAndPortList=["ip:port"],patternList=["json.data.id"],keyList=["assertingData"])
