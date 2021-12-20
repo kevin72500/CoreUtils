@@ -84,6 +84,11 @@ def general_sender(topic="",serverAndPort="localhost:9092",message=""):
 def general_listener(topic="",serverAndPort="localhost:9092",flag="",pattern="",key=""):
     kafkaOper(topic,serverAndPort).getConsumer().doFileterFromComsumer(flag,pattern,key)
 
+
+
+def general_listener2(topic="",serverAndPort="localhost:9092",flag="",pattern="",key=""):
+    return kafkaOper(topic,serverAndPort).getConsumer().doFileterFromComsumer(flag,pattern,key)
+
 def multi_topic_listener(topicList=[],serverAndPortList=[],flagList=[],patternList=[],keyList=[]):
     threadList=[]
     for one in zip(topicList,serverAndPortList,flagList,patternList,keyList):
@@ -94,6 +99,30 @@ def multi_topic_listener(topicList=[],serverAndPortList=[],flagList=[],patternLi
         threadList.append(temp)
     for one in threadList:
         one.join()
+
+
+import asyncio
+import websockets
+import kafka
+import random
+from functools import partial
+
+async def kafkaLocalFetch(websocket=None, serverPath='0.0.0.0:9092',topic="testTopic",interval=0,nums=None):
+    k_conn=kafka.KafkaConsumer(bootstrap_servers=serverPath)
+    k_conn.subscribe(topic)
+    while True:
+        # now = datetime.datetime.utcnow().isoformat() + 'Z'
+        msg=k_conn.poll(timeout_ms=interval,max_records=nums)
+        for k,v in msg.items():
+            for one in v:
+                print(one.value.decode())
+                await websocket.send(one.value.decode())
+                await asyncio.sleep(random.random() * 3)
+
+def kafkaFetchServer(interval=0,nums=None,serverPath='0.0.0.0:9092',topic="testTopic",):
+    start_server = websockets.serve(partial(kafkaLocalFetch,serverPath=serverPath,topic=topic), '127.0.0.1', 5678)
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()
 
 
 if __name__ == '__main__':
@@ -108,14 +137,14 @@ if __name__ == '__main__':
     # keyList=["555"])
 
 
-    multi_topic_listener(topicList=['iotHub','device_default_prop','device_default_state'],
-    serverAndPortList=["192.168.125.145:9092","192.168.125.145:9092","192.168.125.145:9092"],
-    flagList=["json","json","json"],
-    patternList=["payload.virDevUid","payload.virDevUid","payload.deviceId"],
-    keyList=["914959009603264531","914959009603264531","914959009603264536"])
+    # multi_topic_listener(topicList=['iotHub','device_default_prop','device_default_state'],
+    # serverAndPortList=["192.168.125.145:9092","192.168.125.145:9092","192.168.125.145:9092"],
+    # flagList=["json","json","json"],
+    # patternList=["payload.virDevUid","payload.virDevUid","payload.deviceId"],
+    # keyList=["914959009603264531","914959009603264531","914959009603264536"])
 
     
-    # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="json",pattern="abc.bcd",key=555)
+    general_listener(topic="testTopic",serverAndPort="0.0.0.0:9092",flag="",pattern="",key="")
 
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")

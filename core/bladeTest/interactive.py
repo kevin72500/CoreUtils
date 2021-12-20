@@ -6,15 +6,17 @@ sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))))
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
-from pywebio import start_server
+from pywebio import start_server,session
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 import json
 from core.xmind2excel import makeCase
+from core.kafkaUtil import general_sender,kafkaFetchServer, kafkaLocalFetch
 from core.utils import swagger2jmeter,CFacker
-import decimal
+import decimal,websockets,asyncio
 
 
 def app():
+    session.set_env(title='testToolKit')
     select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造"])
 
     if select_type=="xmind转excel":
@@ -520,6 +522,32 @@ def myFackData():
     # put_text(restDict)
     put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
 
+
+def kafkaListener():
+    data = input_group("kafka配置",[
+            input("kafka topic", name="topic"),
+            input("kafka 地址", name="address"),
+            input("过滤方式json, regx", name="filter"),
+            input("过滤表达式", name="pattern"),
+            input("比对关键字", name="key"),
+            input("要发送的消息",name="msg"),
+            ])
+
+    if data['msg']=="None" or data['msg']=="":
+        location=os.path.dirname(os.path.abspath(os.path.abspath('.')))+os.path.sep+"kafkaWebClient.html"
+        print(location)
+        put_file(content=open(location,mode="rb").read(),name="kafkaClient.html",label="点击下载网页客户端")
+        # put_link(name='结果展示',url=f"{location}",new_window=True).show()
+        # put_link(name='结果展示',url=f"{os.path.dirname(os.path.abspath('.'))+os.path.sep}kafkaWebClient.html",new_window=True).show()
+        kafkaFetchServer(serverPath=data['address'],topic=data['topic'])
+
+        # kafkaLocalFetch(topic=data['topic'],serverPath=data['address'])
+        # start_server = websockets.serve(kafkaLocalFetch, '127.0.0.1', 5678)
+        # asyncio.get_event_loop().run_until_complete(start_server)
+        # asyncio.get_event_loop().run_forever()
+
+    else:
+        general_sender(data['topic'],data['address'],data['msg'])
 
 
 if __name__ == '__main__':
