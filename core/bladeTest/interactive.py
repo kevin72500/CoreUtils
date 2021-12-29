@@ -6,18 +6,19 @@ sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))))
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
-from pywebio import start_server,session
+from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 import json
 from core.xmind2excel import makeCase
-from core.kafkaUtil import general_sender,kafkaFetchServer, kafkaLocalFetch
+from core.kafkaUtil import general_sender,general_orderMsg,general_orderMsgWithFilter
 from core.utils import swagger2jmeter,CFacker
 import decimal,websockets,asyncio
+from functools import partial
 
 
 def app():
     session.set_env(title='testToolKit')
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造"])
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -29,6 +30,8 @@ def app():
         jmeterScriptGen()
     elif select_type=="假数据构造":
         myFackData()
+    elif select_type=="kafka操作":
+        kafkaListener()
 
 
 def jmeterScriptGen():
@@ -524,30 +527,33 @@ def myFackData():
 
 
 def kafkaListener():
-    data = input_group("kafka配置",[
-            input("kafka topic", name="topic"),
-            input("kafka 地址", name="address"),
-            input("过滤方式json, regx", name="filter"),
-            input("过滤表达式", name="pattern"),
-            input("比对关键字", name="key"),
-            input("要发送的消息",name="msg"),
+    session.set_env(title='testTools')
+    select_type = select("选择kafka操作:",["kafka发送消息","kafka接收固定消息"])
+
+    if select_type=="kafka发送消息":
+        data = input_group("kafka连接配置",[
+            input("kafka topic，必填", name="topic"),
+            input("kafka 地址，如ip:port，必填", name="address"),
+            input("要发送的消息，必填",name="msg"),
             ])
-
-    if data['msg']=="None" or data['msg']=="":
-        location=os.path.dirname(os.path.abspath(os.path.abspath('.')))+os.path.sep+"kafkaWebClient.html"
-        print(location)
-        put_file(content=open(location,mode="rb").read(),name="kafkaClient.html",label="点击下载网页客户端")
-        # put_link(name='结果展示',url=f"{location}",new_window=True).show()
-        # put_link(name='结果展示',url=f"{os.path.dirname(os.path.abspath('.'))+os.path.sep}kafkaWebClient.html",new_window=True).show()
-        kafkaFetchServer(serverPath=data['address'],topic=data['topic'])
-
-        # kafkaLocalFetch(topic=data['topic'],serverPath=data['address'])
-        # start_server = websockets.serve(kafkaLocalFetch, '127.0.0.1', 5678)
-        # asyncio.get_event_loop().run_until_complete(start_server)
-        # asyncio.get_event_loop().run_forever()
-
-    else:
         general_sender(data['topic'],data['address'],data['msg'])
+        put_text('发送完成')
+    elif select_type=="kafka接收固定消息":
+        data = input_group("kafka连接配置",[
+            input("kafka topic，必填", name="topic"),
+            input("kafka 地址，如ip:port，必填", name="address"),
+            input("持续接收时间，必填", name="interval"),
+            input("获取消息数量（条数），必填", name="getNum"),
+            input("过滤方式，仅支持填json或regx，非必填", name="filter"),
+            input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern"),
+            input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key"),
+            ])
+        if data['filter']=="None" or data['filter']=="":
+            msg=general_orderMsg(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']))
+            put_text("\n".join(msg))
+        else:
+            msg=general_orderMsgWithFilter(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']),filterFlag=data['filter'],pattern=data['pattern'],matchStr=data['key'])
+            put_text("\n".join(msg))
 
 
 if __name__ == '__main__':
