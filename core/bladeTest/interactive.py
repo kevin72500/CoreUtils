@@ -565,7 +565,7 @@ def kafkaListener():
 
 
 if __name__ == '__main__':
-    start_server(kafkaListener, port=8899)
+    start_server(myapp, port=8899)
     # kafkaListener()
     # myFackData()
     

@@ -39,6 +39,32 @@ class kafkaOper(object):
         except Exception as e:
             logger.error('json 解析失败')
             logger.error(f'{allStr}')
+    def returnJsonFilter(self,allStr,pattern,key):
+        try:
+        # print(flag)
+            allStr = json.loads(allStr.value.decode())
+            flag=jmespath.search(pattern,allStr)
+            if flag==key:
+                return allStr
+            # else:
+            #     logger.info(f'{allStr}')
+        except Exception as e:
+            logger.error('json 解析失败')
+            logger.error(f'{allStr}')
+
+    def returnRegxFilter(self,allStr,pattern, key):
+        try:
+            allStr = allStr.value.decode()
+            flag=re.compile(pattern)
+            res=flag.findall(allStr)
+            # print(res)
+            if key in "".join(res):
+                return allStr
+            # else:
+            #     logger.info(f'{allStr}')
+        except Exception as e:
+            logger.error('regx 解析失败')
+            logger.error(f'{allStr}') 
 
     def regxFilter(self,allStr,pattern, key):
         try:
@@ -126,14 +152,19 @@ class kafkaOper(object):
             # print(len(resList))
         return resList
     
-    def retrivalFlowMsg(self):
+    def retrivalFlowMsg(self,flag,pattern,key):
         self.kafkaConnection.subscribe(self.topic)
         while True:
         # now = datetime.datetime.utcnow().isoformat() + 'Z'
             msg=self.kafkaConnection.poll(timeout_ms=0,max_records=10)
             for k,v in msg.items():
                 for one in v:
-                    yield one.value.decode()
+                    if flag=="json":
+                        yield self.returnJsonFilter(one.value.decode(), pattern, key)
+                    elif flag=="regx":
+                        yield self.returnRegxFilter(one.value.decode(), pattern, key)
+                    else:
+                        yield one.value.decode()
 
 
 def general_orderMsg(topic,serverAndPort,interval_ms,getNum,callbackFlag=False,callbackFuc=None):
@@ -149,8 +180,8 @@ def general_orderMsgWithFilter(topic,serverAndPort,interval_ms,getNum,filterFlag
     else:
         callbackFuc(kafkaOper(topic,serverAndPort).getSubscribe().retrivalFixedMsgWithFilter(interval_ms,getNum,filterFlag,pattern,matchStr))
 
-def continue_orderMsg(topic,serverAndPort):
-    return kafkaOper(topic,serverAndPort).getSubscribe().retrivalFlowMsg()
+def continue_orderMsg(topic,serverAndPort,flag,pattern,key):
+    yield kafkaOper(topic,serverAndPort).getSubscribe().retrivalFlowMsg(flag,pattern,key)
 
 def general_sender(topic="",serverAndPort="localhost:9092",message=""):
     kafkaOper(topic,serverAndPort).getProducer().doSendFromProducer(message)
@@ -168,6 +199,8 @@ def multi_topic_listener(topicList=[],serverAndPortList=[],flagList=[],patternLi
         threadList.append(temp)
     for one in threadList:
         one.join()
+
+
 
 
 import asyncio
@@ -188,17 +221,22 @@ async def kafkaMsgRecv(websocket=None, serverPath='0.0.0.0:9092',topic="testTopi
                 await websocket.send(one.value.decode())
                 await asyncio.sleep(random.random() * 3)
 
-# async def kafkaMsgSend(ip_address,port):
-#     async with websockets.connect(f'ws://{ip_address}:{port}') as websocket:
-#         res=await websocket.recv()
-#         print(res)
-#         await asyncio.sleep(random.random() * 3)
 
-# def kafkaGetClient(ip_address,port):
-#     asyncio.get_event_loop().run_until_complete(partial(kafkaMsgSend,ip_address=ip_address,port=port))
+async def kafkaMsgRecvWithFilter(websocket=None, serverPath='0.0.0.0:9092', topic="testTopic", interval=0, nums=None):
+    k_conn = kafka.KafkaConsumer(bootstrap_servers=serverPath)
+    k_conn.subscribe(topic)
+    while True:
+        # now = datetime.datetime.utcnow().isoformat() + 'Z'
+        msg = k_conn.poll(timeout_ms=interval, max_records=nums)
+        for k, v in msg.items():
+            for one in v:
+                print(one.value.decode())
+                await websocket.send(one.value.decode())
+                await asyncio.sleep(random.random() * 3)
 
 
-def kafkaFetchServer(interval=0,nums=None,serverPath='0.0.0.0:9092',topic="testTopic",local='127.0.0.1',port=5678):
+
+def kafkaFetchServer(interval=0,nums=None,serverPath='0.0.0.0:9092',topic="testTopic",local='127.0.0.1',port=8765):
     start_server = websockets.serve(partial(kafkaMsgRecv,serverPath=serverPath,topic=topic), local, port)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
@@ -223,8 +261,14 @@ if __name__ == '__main__':
     # keyList=["914959009603264531","914959009603264531","914959009603264536"])
 
     
-    general_listener(topic="testTopic",serverAndPort="0.0.0.0:9092",flag="",pattern="",key="")
+    # general_listener(topic="testTopic",serverAndPort="0.0.0.0:9092",flag="",pattern="",key="")
 
+
+    # kafkaFetchServer()
+
+    for one in continue_orderMsg('testTopic','localhost:9092','regx',"message (\d{4})\-",'2022'):
+        for a in one:
+            print(a)
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
     # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')

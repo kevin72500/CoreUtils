@@ -1,8 +1,12 @@
+import sys,os
+# print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.extend(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from pywebio.platform.flask import webio_view
 from flask import Flask
 from flask import redirect
-from core.bladeTest.interactive  import myapp,kafkaListener,uploadXmind,oneCheck,onePageInput,jmeterScriptGen,myFackData
-from core.kafkaUtil import kafkaFetchServer
+from interactive  import myapp,kafkaListener,uploadXmind,oneCheck,onePageInput,jmeterScriptGen,myFackData
+from ..kafkaUtil import kafkaFetchServer
 from multiprocessing import Process
 
 
