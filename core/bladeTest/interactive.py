@@ -1,22 +1,23 @@
 import sys
 import os,time
-# print("###"+os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))))
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())))) 
-
+# print("###"+os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# print("###"+os.path.abspath(os.path.dirname(os.getcwd())))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
 from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
-import json
 from core.xmind2excel import makeCase
-from core.kafkaUtil import general_sender,general_orderMsg,general_orderMsgWithFilter
 from core.utils import swagger2jmeter,CFacker
-import decimal,websockets,asyncio
+from core.kafkaUtil import general_sender,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServer
 from functools import partial
+import decimal,websockets,asyncio
+import json
 
 
-def app():
+def myapp():
     session.set_env(title='testToolKit')
     select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作"])
 
@@ -525,10 +526,9 @@ def myFackData():
     # put_text(restDict)
     put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
 
-
 def kafkaListener():
     session.set_env(title='testTools')
-    select_type = select("选择kafka操作:",["kafka发送消息","kafka接收固定消息"])
+    select_type = select("选择kafka操作:",["kafka发送消息","kafka接收固定消息","kafka持续接收消息"])
 
     if select_type=="kafka发送消息":
         data = input_group("kafka连接配置",[
@@ -554,10 +554,19 @@ def kafkaListener():
         else:
             msg=general_orderMsgWithFilter(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']),filterFlag=data['filter'],pattern=data['pattern'],matchStr=data['key'])
             put_text("\n".join(msg))
+    elif select_type=="kafka持续接收消息":
+        # host=session.info["server_host"]
+        put_link(name='kafka',url=f"http://localhost:8899/kafkaWebClient.html")
+
+
+
+
+
 
 
 if __name__ == '__main__':
-    start_server(app, port=8080)
+    start_server(kafkaListener, port=8899)
+    # kafkaListener()
     # myFackData()
     
 

@@ -1,12 +1,13 @@
 <html>
 
 <head>
-    <title>WebSocket demo</title>
+    <title>Kafka WebSocket</title>
 </head>
 
 <body>
+<h1>消息：</h1>
     <script>
-        var ws = new WebSocket("ws://localhost:5678/"),
+        var ws = new WebSocket("ws://localhost:8765/"),
             messages = document.createElement('ul');
         ws.onmessage = function (event) {
             var messages = document.getElementsByTagName('ul')[0],
