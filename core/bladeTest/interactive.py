@@ -1,3 +1,4 @@
+import random
 import sys
 import os,time
 # print("###"+os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -11,14 +12,16 @@ from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.xmind2excel import makeCase
 from core.utils import swagger2jmeter,CFacker
-from core.kafkaUtil import general_sender,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServer
+from core.kafkaUtil import general_sender,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
+from multiprocessing import Process
 import decimal,websockets,asyncio
 import json
 
 
 def myapp():
     session.set_env(title='testToolKit')
+
     select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作"])
 
     if select_type=="xmind转excel":
@@ -36,6 +39,7 @@ def myapp():
 
 
 def jmeterScriptGen():
+    session.set_env(title='testToolKit')
     url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
     # print(url)
     location=swagger2jmeter(url)
@@ -43,6 +47,7 @@ def jmeterScriptGen():
 
 
 def uploadXmind():
+    session.set_env(title='testToolKit')
     # Upload a file and save to server      
     img = open('xmindStructure.jpg', 'rb').read()  
     put_image(img)              
@@ -58,6 +63,7 @@ def uploadXmind():
 
 
 def onePageInput():
+    session.set_env(title='testToolKit')
     put_markdown('''# 基础指令参考：
         ## blade create cpu load [flags]
                             --timeout string   设定运行时长，单位是秒，通用参数
@@ -179,7 +185,7 @@ def onePageInput():
 
 
 def oneCheck():
-
+    session.set_env(title='testToolKit')
     input_data={"data":[]}
     temp_data={}
     
@@ -358,6 +364,7 @@ def oneCheck():
             
 
 def runAndGetReport(input_data):
+    session.set_env(title='testToolKit')
     popup(title="注意",content="正在运行测试。。。") 
     url=generateHtmlReport(running(jf=input_data))
     print(url)
@@ -368,7 +375,8 @@ def runAndGetReport(input_data):
 
 
 def runToolAsServer(portNum):
-    start_server(app, port=portNum)
+    session.set_env(title='testToolKit')
+    start_server(myapp, port=portNum)
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -379,6 +387,7 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def myFackData():
+    session.set_env(title='testToolKit')
     all_options={
     "city_suffix":"市，县",
     "country":"国家",
@@ -528,7 +537,8 @@ def myFackData():
 
 def kafkaListener():
     session.set_env(title='testTools')
-    select_type = select("选择kafka操作:",["kafka发送消息","kafka接收固定消息","kafka持续接收消息"])
+
+    select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息"])
 
     if select_type=="kafka发送消息":
         data = input_group("kafka连接配置",[
@@ -538,39 +548,81 @@ def kafkaListener():
             ])
         general_sender(data['topic'],data['address'],data['msg'])
         put_text('发送完成')
-    elif select_type=="kafka接收固定消息":
-        data = input_group("kafka连接配置",[
-            input("kafka topic，必填", name="topic"),
-            input("kafka 地址，如ip:port，必填", name="address"),
-            input("持续接收时间，必填", name="interval"),
-            input("获取消息数量（条数），必填", name="getNum"),
-            input("过滤方式，仅支持填json或regx，非必填", name="filter"),
-            input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern"),
-            input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key"),
-            ])
-        if data['filter']=="None" or data['filter']=="":
-            msg=general_orderMsg(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']))
-            put_text("\n".join(msg))
-        else:
-            msg=general_orderMsgWithFilter(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']),filterFlag=data['filter'],pattern=data['pattern'],matchStr=data['key'])
-            put_text("\n".join(msg))
+    # elif select_type=="kafka接收固定消息":
+    #     data = input_group("kafka连接配置",[
+    #         input("kafka topic，必填", name="topic"),
+    #         input("kafka 地址，如ip:port，必填", name="address"),
+    #         input("持续接收时间，必填", name="interval"),
+    #         input("获取消息数量（条数），必填", name="getNum"),
+    #         input("过滤方式，仅支持填json或regx，非必填", name="filter"),
+    #         input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern"),
+    #         input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key"),
+    #         ])
+    #     if data['filter']=="None" or data['filter']=="":
+    #         msg=general_orderMsg(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']))
+    #         put_text("\n".join(msg))
+    #     else:
+    #         msg=general_orderMsgWithFilter(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']),filterFlag=data['filter'],pattern=data['pattern'],matchStr=data['key'])
+    #         put_text("\n".join(msg))
     elif select_type=="kafka持续接收消息":
         # host=session.info["server_host"]
-        put_link(name='kafka',url=f"http://localhost:8899/kafkaWebClient.html")
+        put_text(
+            "iotHub消息队列过滤，采用json方式，过滤虚拟设备号为：payload.virDevUid\n空间管理属性device_default_prop过滤，采用json方式，过滤虚拟设备号为payload.virDevUid\n空间管理状态device_default_state过滤，采用json方式，过滤实际设备号为payload.deviceId")
+        data = input_group("kafka连接配置", [
+            input("kafka topic，必填", name="topic",value='iotHub'),
+            input("kafka 地址，如ip:port，必填", name="address",value='192.168.125.149:9092'),
+            input("过滤方式，仅支持填json或regx，非必填", name="filter",value='json'),
+            input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern",value="payload.name"),
+            input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key",value="status"),
+        ])
+        ip = session.info["server_host"].split(":")[0]
+        portNum = random.randint(59000, 60000)
+        print(data['address'], data['topic'], data['filter'], data['pattern'], data['key'],portNum)
+        Process(target=kafkaFetchServerWithFilter, args=(0, None, data['address'], data['topic'],data['filter'],data['pattern'],data['key'],"0.0.0.0",portNum)).start()
+        htmlRaw='''
+           <html>
+                <head>
+                    <title>WebSocket demo</title>
+                </head>
+                <body>
+                <h1>kafka消息：</h1>
+                    <script>
+                        var ws = new WebSocket("ws://'''+str(ip)+''':'''+str(portNum)+'''/"),
+                            messages = document.createElement('ul');
+                        ws.onmessage = function (event) {
+                            var messages = document.getElementsByTagName('ul')[0],
+                                message = document.createElement('li'),
+                                content = document.createTextNode(event.data);
+                            message.appendChild(content);
+                            messages.appendChild(message);
+                        };
+                        document.body.appendChild(messages);
+                    </script>
+                </body>
+            </html>
+        '''
+        f=open("kafkaWebClient"+str(portNum)+".html",'w+',encoding='utf-8')
+        f.write(htmlRaw)
+        # import socket
+        # ip = socket.gethostbyname(socket.gethostname())
+
+        put_link(name='点击kafka连接，开始接收消息',url=f"http://{ip}:8899/kafka?portNum={portNum}")
+
+# @session.defer_call
+# def clean():
+#     path=os.path.abspath(".")
+#     files=os.listdir(path)
+#     for i,f in enumerate(files):
+#         if f.find("kafkaWebClient")>=0:
+#             print(i)
+#             os.remove(path+os.sep+f)
 
 
-
-
-
+# print(session.info['server_host'])
 
 
 if __name__ == '__main__':
-    start_server(myapp, port=8899)
-    # kafkaListener()
+    # start_server(myapp, port=8899)
+    # print(session.info["server_host"].split(":")[0])
+    kafkaListener()
     # myFackData()
-    
-
-
-
-
-

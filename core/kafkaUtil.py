@@ -41,10 +41,11 @@ class kafkaOper(object):
             logger.error(f'{allStr}')
     def returnJsonFilter(self,allStr,pattern,key):
         try:
-        # print(flag)
             allStr = json.loads(allStr.value.decode())
             flag=jmespath.search(pattern,allStr)
-            if flag==key:
+            # print(f'flag: {flag}')
+            # print(f'key: {key}')
+            if flag in key:
                 return allStr
             # else:
             #     logger.info(f'{allStr}')
@@ -57,7 +58,8 @@ class kafkaOper(object):
             allStr = allStr.value.decode()
             flag=re.compile(pattern)
             res=flag.findall(allStr)
-            # print(res)
+            # print(f'res: {res}')
+            # print(f'key: {key}')
             if key in "".join(res):
                 return allStr
             # else:
@@ -160,9 +162,9 @@ class kafkaOper(object):
             for k,v in msg.items():
                 for one in v:
                     if flag=="json":
-                        yield self.returnJsonFilter(one.value.decode(), pattern, key)
+                        yield self.returnJsonFilter(one, pattern, key)
                     elif flag=="regx":
-                        yield self.returnRegxFilter(one.value.decode(), pattern, key)
+                        yield self.returnRegxFilter(one, pattern, key)
                     else:
                         yield one.value.decode()
 
@@ -217,29 +219,68 @@ async def kafkaMsgRecv(websocket=None, serverPath='0.0.0.0:9092',topic="testTopi
         msg=k_conn.poll(timeout_ms=interval,max_records=nums)
         for k,v in msg.items():
             for one in v:
-                print(one.value.decode())
+                # print(one.value.decode())
                 await websocket.send(one.value.decode())
                 await asyncio.sleep(random.random() * 3)
 
 
-async def kafkaMsgRecvWithFilter(websocket=None, serverPath='0.0.0.0:9092', topic="testTopic", interval=0, nums=None):
-    k_conn = kafka.KafkaConsumer(bootstrap_servers=serverPath)
-    k_conn.subscribe(topic)
-    while True:
-        # now = datetime.datetime.utcnow().isoformat() + 'Z'
-        msg = k_conn.poll(timeout_ms=interval, max_records=nums)
-        for k, v in msg.items():
-            for one in v:
-                print(one.value.decode())
-                await websocket.send(one.value.decode())
-                await asyncio.sleep(random.random() * 3)
+async def kafkaMsgRecvWithFilter(websocket=None,flag="",pattern="",key="", serverPath='0.0.0.0:9092', topic="testTopic", interval=0, nums=None):
+    for one in continue_orderMsg(flag=flag,pattern=pattern,key=key,topic=topic,serverAndPort=serverPath):
+        for a in one:
+            # print(f'a is:{a}')
+            if a is not None:
+                print(a)
+                try:
+                    await websocket.send(json.dumps(a,ensure_ascii=False))
+                    await asyncio.sleep(0)
+                except Exception as e:
+                    print(e)
+                    print(a)
+
+async def muiltiKafkaMsgRecvWithFilter(websocket=None,flag="",pattern="",key="", serverPath='0.0.0.0:9092', topic="testTopic", interval=0, nums=None):
+    for one in continue_orderMsg(flag=flag,pattern=pattern,key=key,topic=topic,serverAndPort=serverPath):
+        for a in one:
+            # print(f'a is:{a}')
+            if a is not None:
+                try:
+                    await websocket.send(json.dumps(a))
+                    await asyncio.sleep(0)
+                except Exception as e:
+                    print(e)
+                    print(a)
+
+def multi_topic_listener(topicList=[],serverAndPortList=[],flagList=[],patternList=[],keyList=[]):
+    threadList=[]
+    for one in zip(topicList,serverAndPortList,flagList,patternList,keyList):
+        (a,b,c,d,e)=one
+        # print(f"{a},{b},{c},{d}")
+        temp=threading.Thread(target=general_listener,args=(a,b,c,d,e))
+        temp.start()
+        threadList.append(temp)
+    for one in threadList:
+        one.join()
 
 
 
-def kafkaFetchServer(interval=0,nums=None,serverPath='0.0.0.0:9092',topic="testTopic",local='127.0.0.1',port=8765):
+def kafkaFetchServer(interval=0,nums=None,serverPath='0.0.0.0:9092',topic="testTopic",local='0.0.0.0',port=8765):
+    # print(serverPath)
+    newloop=asyncio.new_event_loop()
+    asyncio.set_event_loop(newloop)
+    loop=asyncio.get_event_loop()
     start_server = websockets.serve(partial(kafkaMsgRecv,serverPath=serverPath,topic=topic), local, port)
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+    loop.run_until_complete(start_server)
+    loop.run_forever()
+
+def kafkaFetchServerWithFilter(interval=0,nums=None,serverPath='0.0.0.0:9092',topic="testTopic",flag="",pattern="",key="",local='0.0.0.0',port=8765):
+    # print(serverPath)
+    print('in kafka fetch server with filter:'.format(flag,pattern,key,serverPath,topic))
+    newloop=asyncio.new_event_loop()
+    asyncio.set_event_loop(newloop)
+    loop=asyncio.get_event_loop()
+    start_server = websockets.serve(
+        partial(kafkaMsgRecvWithFilter, flag=flag, pattern=pattern, key=key, serverPath=serverPath, topic=topic), local,port)
+    loop.run_until_complete(start_server)
+    loop.run_forever()
 
 
 if __name__ == '__main__':
@@ -264,11 +305,12 @@ if __name__ == '__main__':
     # general_listener(topic="testTopic",serverAndPort="0.0.0.0:9092",flag="",pattern="",key="")
 
 
-    # kafkaFetchServer()
+    # kafkaFetchServer(0,None,'192.168.125.145:9092','testTopic')
+    kafkaFetchServerWithFilter(0,None,'192.168.125.145:9092','testTopic','regx',"(\d{4}-\d{02}-\d{02})",'2022-01-04')
 
-    for one in continue_orderMsg('testTopic','localhost:9092','regx',"message (\d{4})\-",'2022'):
-        for a in one:
-            print(a)
+    # for one in continue_orderMsg('testTopic','192.168.125.145:9092','regx',"(\d{4}-\d{02}-\d{02})",'2022-01-04'):
+    #     for a in one:
+    #         print(a)
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
     # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')
