@@ -25,7 +25,4 @@ using some opensource packge to complish this
   
 ### 5. next step plan to add some redis connection or kafka connection or fake data generator into this -- done kafka and fake data
 
-### 6. next step plan to add some redis connnection or mqtt sender or reciever into this
-
-
-
+### 6. next step plan to add some redis connnection or mqtt sender or reciever into this or har2locust or other protocol sender...
