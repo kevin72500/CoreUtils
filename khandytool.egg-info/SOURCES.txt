@@ -2,13 +2,15 @@ README.md
 setup.cfg
 setup.py
 core/__init__.py
+core/kafkaUI.py
+core/kafkaUtil.py
 core/utils.py
 core/xmind2excel.py
 core/bladeTest/__init__.py
+core/bladeTest/app.py
 core/bladeTest/interactive.py
 core/bladeTest/main.py
 core/bladeTest/versionSuggestion.py
-core/bladeTest/xmind2excel.py
 khandytool.egg-info/PKG-INFO
 khandytool.egg-info/SOURCES.txt
 khandytool.egg-info/dependency_links.txt

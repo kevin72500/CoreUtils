@@ -39,7 +39,7 @@ def continueSend():
         time.sleep(2)
         # num=datetime.datetime.now()
         msg={"data":{"date":"2021-01-04"}}
-        general_sender('testTopic',"127.0.0.1:9092",json.dumps(msg))
+        general_sender('aaa',"192.168.2.101:9092",json.dumps(msg))
 
 if __name__=="__main__":
     # kafkaUi()

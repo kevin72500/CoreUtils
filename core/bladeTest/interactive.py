@@ -12,7 +12,7 @@ from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.xmind2excel import makeCase
 from core.utils import swagger2jmeter,CFacker
-from core.kafkaUtil import general_sender,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
+from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
 from multiprocessing import Process
 import decimal,websockets,asyncio
@@ -374,8 +374,7 @@ def runAndGetReport(input_data):
     put_file(content=open(url,mode="rb").read(),name="result.html",label="点击下载简报")
 
 
-def runToolAsServer(portNum):
-    session.set_env(title='testToolKit')
+def run(portNum=8899):
     start_server(myapp, port=portNum)
 
 
@@ -575,38 +574,47 @@ def kafkaListener():
             input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern",value="payload.name"),
             input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key",value="status"),
         ])
-        ip = session.info["server_host"].split(":")[0]
-        portNum = random.randint(59000, 60000)
-        print(data['address'], data['topic'], data['filter'], data['pattern'], data['key'],portNum)
-        Process(target=kafkaFetchServerWithFilter, args=(0, None, data['address'], data['topic'],data['filter'],data['pattern'],data['key'],"0.0.0.0",portNum)).start()
-        htmlRaw='''
-           <html>
-                <head>
-                    <title>WebSocket demo</title>
-                </head>
-                <body>
-                <h1>kafka消息：</h1>
-                    <script>
-                        var ws = new WebSocket("ws://'''+str(ip)+''':'''+str(portNum)+'''/"),
-                            messages = document.createElement('ul');
-                        ws.onmessage = function (event) {
-                            var messages = document.getElementsByTagName('ul')[0],
-                                message = document.createElement('li'),
-                                content = document.createTextNode(event.data);
-                            message.appendChild(content);
-                            messages.appendChild(message);
-                        };
-                        document.body.appendChild(messages);
-                    </script>
-                </body>
-            </html>
-        '''
-        f=open("kafkaWebClient"+str(portNum)+".html",'w+',encoding='utf-8')
-        f.write(htmlRaw)
+        #仅在app中使用
+        # ip = session.info["server_host"].split(":")[0]
+        # portNum = random.randint(59000, 60000)
+        # print(data['address'], data['topic'], data['filter'], data['pattern'], data['key'],portNum)
+        # Process(target=kafkaFetchServerWithFilter, args=(0, None, data['address'], data['topic'],data['filter'],data['pattern'],data['key'],"0.0.0.0",portNum)).start()
+        # htmlRaw='''
+        #    <html>
+        #         <head>
+        #             <title>WebSocket demo</title>
+        #         </head>
+        #         <body>
+        #         <h1>kafka消息：</h1>
+        #             <script>
+        #                 var ws = new WebSocket("ws://'''+str(ip)+''':'''+str(portNum)+'''/"),
+        #                     messages = document.createElement('ul');
+        #                 ws.onmessage = function (event) {
+        #                     var messages = document.getElementsByTagName('ul')[0],
+        #                         message = document.createElement('li'),
+        #                         content = document.createTextNode(event.data);
+        #                     message.appendChild(content);
+        #                     messages.appendChild(message);
+        #                 };
+        #                 document.body.appendChild(messages);
+        #             </script>
+        #         </body>
+        #     </html>
+        # '''
+        # path=os.path.abspath(os.path.dirname(__file__))
+        # f=open(path+os.sep+"static/kafkaWebClient"+str(portNum)+".html",'w+',encoding='utf-8')
+        # f.write(htmlRaw)
+
         # import socket
         # ip = socket.gethostbyname(socket.gethostname())
 
-        put_link(name='点击kafka连接，开始接收消息',url=f"http://{ip}:8899/kafka?portNum={portNum}")
+        # put_link(name='点击kafka连接，开始接收消息',url=f"http://{ip}:8899/kafka?portNum={portNum}&ip={ip}")
+        for one in continue_orderMsg(data['topic'], data['address'], data['filter'], data['pattern'], data['key']):
+            for a in one:
+                put_text(a)
+                # print(a)
+
+
 
 # @session.defer_call
 # def clean():
@@ -622,7 +630,7 @@ def kafkaListener():
 
 
 if __name__ == '__main__':
-    # start_server(myapp, port=8899)
+    start_server(myapp, port=8899)
     # print(session.info["server_host"].split(":")[0])
-    kafkaListener()
+    # kafkaListener()
     # myFackData()

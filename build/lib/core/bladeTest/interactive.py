@@ -1,20 +1,28 @@
+import random
 import sys
 import os,time
-# print("###"+os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))))
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())))) 
-
+# print("###"+os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# print("###"+os.path.abspath(os.path.dirname(os.getcwd())))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
-from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload
-from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code
-from pywebio import start_server
+from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox
+from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
+from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
-import json
 from core.xmind2excel import makeCase
-from core.utils import swagger2jmeter
+from core.utils import swagger2jmeter,CFacker
+from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
+from functools import partial
+from multiprocessing import Process
+import decimal,websockets,asyncio
+import json
 
 
-def app():
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本"])
+def myapp():
+    session.set_env(title='testToolKit')
+
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -24,9 +32,14 @@ def app():
         onePageInput()
     elif select_type=="swagger地址转换jmeter脚本":
         jmeterScriptGen()
+    elif select_type=="假数据构造":
+        myFackData()
+    elif select_type=="kafka操作":
+        kafkaListener()
 
 
 def jmeterScriptGen():
+    session.set_env(title='testToolKit')
     url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
     # print(url)
     location=swagger2jmeter(url)
@@ -34,6 +47,7 @@ def jmeterScriptGen():
 
 
 def uploadXmind():
+    session.set_env(title='testToolKit')
     # Upload a file and save to server      
     img = open('xmindStructure.jpg', 'rb').read()  
     put_image(img)              
@@ -49,6 +63,7 @@ def uploadXmind():
 
 
 def onePageInput():
+    session.set_env(title='testToolKit')
     put_markdown('''# 基础指令参考：
         ## blade create cpu load [flags]
                             --timeout string   设定运行时长，单位是秒，通用参数
@@ -170,7 +185,7 @@ def onePageInput():
 
 
 def oneCheck():
-
+    session.set_env(title='testToolKit')
     input_data={"data":[]}
     temp_data={}
     
@@ -349,6 +364,7 @@ def oneCheck():
             
 
 def runAndGetReport(input_data):
+    session.set_env(title='testToolKit')
     popup(title="注意",content="正在运行测试。。。") 
     url=generateHtmlReport(running(jf=input_data))
     print(url)
@@ -358,12 +374,263 @@ def runAndGetReport(input_data):
     put_file(content=open(url,mode="rb").read(),name="result.html",label="点击下载简报")
 
 
-def runToolAsServer(portNum):
-    start_server(app, port=portNum)
+def run(portNum=8899):
+    start_server(myapp, port=portNum)
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        super(DecimalEncoder, self).default(o)
+
+
+def myFackData():
+    session.set_env(title='testToolKit')
+    all_options={
+    "city_suffix":"市，县",
+    "country":"国家",
+    "country_code":"国家编码",
+    "district":"区",
+    "latitude":"地理坐标(纬度)",
+    "longitude":"地理坐标(经度)",
+    "postcode":"邮编",
+    "province":"省份 (zh_TW没有此方法)",
+    "address":"详细地址",
+    "street_address":"街道地址",
+    "street_name":"街道名",
+    "street_suffix":"街、路",
+    "ssn":"生成身份证号",
+    "bs":"随机公司服务名",
+    "company":"随机公司名（长）",
+    "company_prefix":"随机公司名（短）",
+    "company_suffix":"公司性质",
+    "credit_card_expire":"随机信用卡到期日",
+    "credit_card_full":"生成完整信用卡信息",
+    "credit_card_number":"信用卡号",
+    "credit_card_provider":"信用卡类型",
+    "credit_card_security_code":"信用卡安全码",
+    "job":"随机职位",
+    "first_name":"名",
+    "first_name_female":"女性名",
+    "first_name_male":"男性名",
+    "first_romanized_name":"罗马名",
+    "last_name":"姓",
+    "last_name_female":"女姓",
+    "last_name_male":"男姓",
+    "last_romanized_name":"随机",
+    "name":"随机生成全名",
+    "name_female":"男性全名",
+    "name_male":"女性全名",
+    "romanized_name":"罗马名",
+    "msisdn":"移动台国际用户识别码，即移动用户的ISDN号码",
+    "phone_number":"随机生成手机号",
+    "phonenumber_prefix":"随机生成手机号段",
+    "ascii_company_email":"随机ASCII公司邮箱名",
+    "ascii_email":"随机ASCII邮箱",
+    "ascii_free_email":"二进制免费邮件",
+    "ascii_safe_email":"二进制安全邮件",
+    "company_email":"公司邮件",
+    "email":"电子邮件",
+    "free_email":"免费电子邮件",
+    "free_email_domain":"免费电子邮件域名",
+    "safe_email":"安全邮箱",
+    "domain_name":"生成域名",
+    "domain_word":"域词(即，不包含后缀)",
+    "ipv4":"随机IP4地址",
+    "ipv6":"随机IP6地址",
+    "mac_address":"随机MAC地址",
+    "tld":"网址域名后缀(.com,.net.cn,等等，不包括.)",
+    "uri":"随机URI地址",
+    "uri_extension":"网址文件后缀",
+    "uri_page":"网址文件（不包含后缀）",
+    "uri_path":"网址文件路径（不包含文件名）",
+    "url":"随机URL地址",
+    "user_name":"随机用户名",
+    "image_url":"随机URL地址",
+    "chrome":"随机生成Chrome的浏览器user_agent信息",
+    "firefox":"随机生成FireFox的浏览器user_agent信息",
+    "internet_explorer":"随机生成IE的浏览器user_agent信息",
+    "opera":"随机生成Opera的浏览器user_agent信息",
+    "safari":"随机生成Safari的浏览器user_agent信息",
+    "linux_platform_token":"随机Linux信息",
+    "user_agent":"随机user_agent信息",
+    "file_extension":"随机文件扩展名",
+    "file_name":"随机文件名（包含扩展名，不包含路径）",
+    "file_path":"随机文件路径（包含文件名，扩展名）",
+    "mime_type":"随机mime Type",
+    "numerify":"三位随机数字",
+    "random_digit":"0~9随机数",
+    "random_digit_not_null":"1~9的随机数",
+    "random_int":"随机数字，默认0~9999，可以通过设置min,max来设置",
+    "random_number":"随机数字，参数digits设置生成的数字位数",
+    "pyfloat":"left_digits=5 #生成的整数位数, right_digits=2 #生成的小数位数, positive=True #是否只有正数",
+    "pyint":"随机Int数字（参考random_int=参数）",
+    "pydecimal":"随机Decimal数字（参考pyfloat参数）",
+    "pystr":"随机字符串",
+    "random_element":"随机字母",
+    "random_letter":"随机字母",
+    "paragraph":"随机生成一个段落",
+    "paragraphs":"随机生成多个段落，通过参数nb来控制段落数，返回数组",
+    "sentence":"随机生成一句话",
+    "sentences":"随机生成多句话，与段落类似",
+    "text":"随机生成一篇文章（不要幻想着人工智能了，至今没完全看懂一句话是什么意思）",
+    "word":"随机生成词语",
+    "words":"随机生成多个词语，用法与段落，句子，类似",
+    "binary":"随机生成二进制编码",
+    "boolean":"True/False",
+    "language_code":"随机生成两位语言编码",
+    "locale":"随机生成语言/国际 信息",
+    "md5":"随机生成MD5",
+    "null_boolean":"NULL/True/False",
+    "password":"随机生成密码,可选参数：length：密码长度；special_chars：是否能使用特殊字符；digits：是否包含数字；upper_case：是否包含大写字母；lower_case：是否包含小写字母",
+    "sha1":"随机SHA1",
+    "sha256":"随机SHA256",
+    "uuid4":"随机UUID",
+    "am_pm":"AM/PM",
+    "century":"随机世纪",
+    "date":"随机日期",
+    "date_between":"随机生成指定范围内日期，参数：start_date，end_date取值：具体日期或者today,-30d,-30y类似",
+    "date_between_dates":"随机生成指定范围内日期，用法同上",
+    "date_object":"随机生产从1970-1-1到指定日期的随机日期。",
+    "date_this_month":"当月",
+    "date_this_year":"当年",
+    "date_time":"随机生成指定时间（1970年1月1日至今）",
+    "date_time_ad":"生成公元1年到现在的随机时间",
+    "date_time_between":"用法同dates",
+    "future_date":"未来日期",
+    "future_datetime":"未来时间",
+    "month":"随机月份",
+    "month_name":"随机月份（英文）",
+    "past_date":"随机生成已经过去的日期",
+    "past_datetime":"随机生成已经过去的时间",
+    "time":"随机24小时时间",
+    "time_object":"随机24小时时间，time对象",
+    "time_series":"随机TimeSeries对象",
+    "timezone":"随机时区",
+    "unix_time":"随机Unix时间",
+    "year":"随机年份",
+    "profile":"随机生成档案信息",
+    "simple_profile":"随机生成简单档案信息",
+    "currency_code":"货币编码",
+    "color_name":"随机颜色名",
+    "hex_color":"随机HEX颜色",
+    "rgb_color":"随机RGB颜色",
+    "safe_color_name":"随机安全色名",
+    "safe_hex_color":"随机安全HEX颜色",
+    "isbn10":"随机ISBN(10位)",
+    "isbn13":"随机ISBN(13位)",
+    "lexify":"替换所有问号?带有随机字母的事件"
+    }
+    
+
+    choose=checkbox(label='从下列选项中，选择你想生成的数据：',options=all_options.values())
+    # put_row([input('自定义键值：'),checkbox(options=[''])])
+    restDict={}
+    for one in choose:
+        funcName=list(all_options.keys())[list(all_options.values()).index(one)]
+        restDict[one]=CFacker().get_it(funcName)
+    
+    # put_text(restDict)
+    put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
+
+def kafkaListener():
+    session.set_env(title='testTools')
+
+    select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息"])
+
+    if select_type=="kafka发送消息":
+        data = input_group("kafka连接配置",[
+            input("kafka topic，必填", name="topic"),
+            input("kafka 地址，如ip:port，必填", name="address"),
+            input("要发送的消息，必填",name="msg"),
+            ])
+        general_sender(data['topic'],data['address'],data['msg'])
+        put_text('发送完成')
+    # elif select_type=="kafka接收固定消息":
+    #     data = input_group("kafka连接配置",[
+    #         input("kafka topic，必填", name="topic"),
+    #         input("kafka 地址，如ip:port，必填", name="address"),
+    #         input("持续接收时间，必填", name="interval"),
+    #         input("获取消息数量（条数），必填", name="getNum"),
+    #         input("过滤方式，仅支持填json或regx，非必填", name="filter"),
+    #         input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern"),
+    #         input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key"),
+    #         ])
+    #     if data['filter']=="None" or data['filter']=="":
+    #         msg=general_orderMsg(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']))
+    #         put_text("\n".join(msg))
+    #     else:
+    #         msg=general_orderMsgWithFilter(topic=data['topic'],serverAndPort=data['address'],interval_ms=int(data['interval']),getNum=int(data['getNum']),filterFlag=data['filter'],pattern=data['pattern'],matchStr=data['key'])
+    #         put_text("\n".join(msg))
+    elif select_type=="kafka持续接收消息":
+        # host=session.info["server_host"]
+        put_text(
+            "iotHub消息队列过滤，采用json方式，过滤虚拟设备号为：payload.virDevUid\n空间管理属性device_default_prop过滤，采用json方式，过滤虚拟设备号为payload.virDevUid\n空间管理状态device_default_state过滤，采用json方式，过滤实际设备号为payload.deviceId")
+        data = input_group("kafka连接配置", [
+            input("kafka topic，必填", name="topic",value='iotHub'),
+            input("kafka 地址，如ip:port，必填", name="address",value='192.168.125.149:9092'),
+            input("过滤方式，仅支持填json或regx，非必填", name="filter",value='json'),
+            input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern",value="payload.name"),
+            input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key",value="status"),
+        ])
+        #仅在app中使用
+        # ip = session.info["server_host"].split(":")[0]
+        # portNum = random.randint(59000, 60000)
+        # print(data['address'], data['topic'], data['filter'], data['pattern'], data['key'],portNum)
+        # Process(target=kafkaFetchServerWithFilter, args=(0, None, data['address'], data['topic'],data['filter'],data['pattern'],data['key'],"0.0.0.0",portNum)).start()
+        # htmlRaw='''
+        #    <html>
+        #         <head>
+        #             <title>WebSocket demo</title>
+        #         </head>
+        #         <body>
+        #         <h1>kafka消息：</h1>
+        #             <script>
+        #                 var ws = new WebSocket("ws://'''+str(ip)+''':'''+str(portNum)+'''/"),
+        #                     messages = document.createElement('ul');
+        #                 ws.onmessage = function (event) {
+        #                     var messages = document.getElementsByTagName('ul')[0],
+        #                         message = document.createElement('li'),
+        #                         content = document.createTextNode(event.data);
+        #                     message.appendChild(content);
+        #                     messages.appendChild(message);
+        #                 };
+        #                 document.body.appendChild(messages);
+        #             </script>
+        #         </body>
+        #     </html>
+        # '''
+        # path=os.path.abspath(os.path.dirname(__file__))
+        # f=open(path+os.sep+"static/kafkaWebClient"+str(portNum)+".html",'w+',encoding='utf-8')
+        # f.write(htmlRaw)
+
+        # import socket
+        # ip = socket.gethostbyname(socket.gethostname())
+
+        # put_link(name='点击kafka连接，开始接收消息',url=f"http://{ip}:8899/kafka?portNum={portNum}&ip={ip}")
+        for one in continue_orderMsg(data['topic'], data['address'], data['filter'], data['pattern'], data['key']):
+            for a in one:
+                put_text(a)
+                # print(a)
+
+
+
+# @session.defer_call
+# def clean():
+#     path=os.path.abspath(".")
+#     files=os.listdir(path)
+#     for i,f in enumerate(files):
+#         if f.find("kafkaWebClient")>=0:
+#             print(i)
+#             os.remove(path+os.sep+f)
+
+
+# print(session.info['server_host'])
+
 
 if __name__ == '__main__':
-    start_server(app, port=8080)
-
-
-
-
+    start_server(myapp, port=8899)
+    # print(session.info["server_host"].split(":")[0])
+    # kafkaListener()
+    # myFackData()
