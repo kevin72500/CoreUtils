@@ -29,6 +29,9 @@ from jinja2 import Environment, FileSystemLoader
 
 
 class RunnerResult(object):
+    '''
+    this just for generate result for the remote executor
+    '''
     def __init__(self):
         
         self.testResTemp={"testTitle":"","chaosCommand":"","chaosId":"","checkCommand":"","expectResponse":"","realResponse":"","checkStatus":""}

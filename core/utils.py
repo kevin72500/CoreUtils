@@ -8,6 +8,7 @@ import pymysql
 from loguru import logger
 from functools import wraps
 import os
+import json
 
 def getFromList(input_list=[],list_index=0):
     if len(input_list)==1:
@@ -37,6 +38,19 @@ def multi2Single(*args):
     for one in args:
         ret = ret+one
     return ret
+
+
+#判断是否为json串
+def isJson(oriStr):
+    if isinstance(oriStr,str):
+        try:
+            targetStr=json.loads(oriStr)
+        except ValueError as e:
+            return False
+        return True
+    else:
+        logger.error(f'{oriStr} not a string')
+        return False
 
 
 #获取数组维数
@@ -425,6 +439,9 @@ def swagger2jmeter(url):
     except Exception as e:
         print(traceback.format_exc())
         return "switch to jmeter script error"
+
+
+
 
 
 if __name__=='__main__':

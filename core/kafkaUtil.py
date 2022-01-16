@@ -3,57 +3,104 @@ import json
 import threading
 from kafka import KafkaConsumer,KafkaProducer
 from kafka.client_async import KafkaClient
+from core.utils import isJson
 import jmespath
 import threading
 from loguru import logger
 import re
 import websockets
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 logger.add('kafkaUtil_log.txt',encoding='utf-8')
 
 class kafkaOper(object):
+    '''
+    main class for kafka general operator, which not tested if you are connect kafka with credentials
+    '''
     def __init__(self,topic,bootstrapserver):
         self.topic=topic
         self.bootstrapserver=bootstrapserver
         self.kafkaConnection=None
     def getConsumer(self,clientid="kafkaOper",auto_offset_reset="latest",**args):
+        '''
+        get consumer
+        :param clientid:
+        :param auto_offset_reset:
+        :param args:
+        :return:
+        '''
         self.kafkaConnection=KafkaConsumer(self.topic,bootstrap_servers=self.bootstrapserver,client_id=clientid,auto_offset_reset=auto_offset_reset)
         return self
     def getProducer(self,clientid="kafkaOper"):
+        '''
+        get producer
+        :param clientid:
+        :return:
+        '''
         self.kafkaConnection=KafkaProducer(bootstrap_servers=self.bootstrapserver,client_id=clientid)
         return self
     def getSubscribe(self):
+        '''
+        get subscriber
+        :return:
+        '''
         self.kafkaConnection=KafkaConsumer(bootstrap_servers=self.bootstrapserver)
         return self
     def jsonFilter(self,allStr,pattern,key):
-        try:
-        # print(flag)
-            allStr = json.loads(allStr.value.decode())
-            flag=jmespath.search(pattern,allStr)
-            if flag==key:
-                logger.warning(f'Topic: {self.topic} 在时间：{datetime.datetime.now()}->结果匹配到: {key}了')
-                logger.info(f'Total String is: {allStr}')
-            # else:
-            #     logger.info(f'{allStr}')
-        except Exception as e:
-            logger.error('json 解析失败')
-            logger.error(f'{allStr}')
+        '''
+        filter string by json
+        :param allStr: origianl string
+        :param pattern: jmeshpath parttern str
+        :param key: target key to match
+        :return:
+        '''
+        if isJson(allStr.value.decode()):
+            try:
+            # print(flag)
+                allStr = json.loads(allStr.value.decode())
+                flag=jmespath.search(pattern,allStr)
+                if flag==key:
+                    logger.warning(f'Topic: {self.topic} 在时间：{datetime.datetime.now()}->结果匹配到: {key}了')
+                    logger.info(f'Total String is: {allStr}')
+                # else:
+                #     logger.info(f'{allStr}')
+            except Exception as e:
+                logger.error('json 解析失败')
+                logger.error(f'{allStr}')
+        logger.error(f"{allStr} isn't a string.")
+
     def returnJsonFilter(self,allStr,pattern,key):
-        try:
-            allStr = json.loads(allStr.value.decode())
-            flag=jmespath.search(pattern,allStr)
-            # print(f'flag: {flag}')
-            # print(f'key: {key}')
-            if flag in key:
-                return allStr
-            # else:
-            #     logger.info(f'{allStr}')
-        except Exception as e:
-            logger.error('json 解析失败')
-            logger.error(f'{allStr}')
+        '''
+        filter string by json and return the result
+        :param allStr:
+        :param pattern:
+        :param key:
+        :return:
+        '''
+        if isJson(str(allStr.value.decode())):
+            try:
+                allStr = json.loads(allStr.value.decode())
+                flag=jmespath.search(pattern,allStr)
+                # print(f'flag: {flag}')
+                # print(f'key: {key}')
+                if flag in key:
+                    return allStr
+            except Exception as e:
+                logger.error('json 解析失败')
+                logger.error(f'{allStr}')
+        else:
+            logger.error(f"{allStr} isn't a string.")
+            return allStr
 
     def returnRegxFilter(self,allStr,pattern, key):
+        '''
+        filter string by regx and return the string
+        :param allStr: orignal string
+        :param pattern: match parttern
+        :param key: target str to match
+        :return:
+        '''
         try:
             allStr = allStr.value.decode()
             flag=re.compile(pattern)
@@ -69,6 +116,13 @@ class kafkaOper(object):
             logger.error(f'{allStr}') 
 
     def regxFilter(self,allStr,pattern, key):
+        '''
+        filter string by regx
+        :param allStr:
+        :param pattern:
+        :param key:
+        :return:
+        '''
         try:
             allStr = allStr.value.decode()
             flag=re.compile(pattern)
@@ -84,6 +138,15 @@ class kafkaOper(object):
             logger.error(f'{allStr}') 
 
     def doFileterFromComsumer(self,flag="",pattern="",matchStr="",keepListen=False,store=False):
+        '''
+        conbine the filter way in one function
+        :param flag:
+        :param pattern:
+        :param matchStr:
+        :param keepListen:
+        :param store:
+        :return:
+        '''
         '''
             flag = "json"
             or
@@ -104,9 +167,22 @@ class kafkaOper(object):
                 logger.warning(f'Topic: {self.topic} 在时间：{datetime.datetime.now()}->未加入匹配的消息是: {one}了')
                 
     def doSendFromProducer(self,message,partition=None,key=None):
+        '''
+        send kafka messeage
+        :param message:
+        :param partition:
+        :param key:
+        :return:
+        '''
         self.kafkaConnection.send(self.topic,value=bytes(message,encoding='utf-8'),partition=partition,key=key)
 
     def retrivalFixedMsg(self,interval_ms,getNum):
+        '''
+        get fixed number message from topic
+        :param interval_ms:
+        :param getNum:
+        :return:
+        '''
         self.kafkaConnection.subscribe(self.topic)
         # print(self.kafkaConnection.poll(timeout_ms=interval_ms,max_records=getNum,update_offsets=False).items())
         # return self.kafkaConnection.poll(timeout_ms=interval_ms,max_records=getNum,update_offsets=False).items()
@@ -121,6 +197,15 @@ class kafkaOper(object):
         return resList
 
     def retrivalFixedMsgWithFilter(self,interval_ms,getNum,filterFlag,pattern,matchStr):
+        '''
+        get fixed number of message from topic with filter
+        :param interval_ms:
+        :param getNum:
+        :param filterFlag:
+        :param pattern:
+        :param matchStr:
+        :return:
+        '''
         self.kafkaConnection.subscribe(self.topic)
         # print(self.kafkaConnection.poll(timeout_ms=interval_ms,max_records=getNum,update_offsets=False).items())
         # return self.kafkaConnection.poll(timeout_ms=interval_ms,max_records=getNum,update_offsets=False).items()
@@ -155,6 +240,13 @@ class kafkaOper(object):
         return resList
     
     def retrivalFlowMsg(self,flag,pattern,key):
+        '''
+        continue get message from topic with filter
+        :param flag:
+        :param pattern:
+        :param key:
+        :return:
+        '''
         self.kafkaConnection.subscribe(self.topic)
         while True:
         # now = datetime.datetime.utcnow().isoformat() + 'Z'
@@ -184,6 +276,32 @@ def general_orderMsgWithFilter(topic,serverAndPort,interval_ms,getNum,filterFlag
 
 def continue_orderMsg(topic,serverAndPort,flag,pattern,key):
     yield kafkaOper(topic,serverAndPort).getSubscribe().retrivalFlowMsg(flag,pattern,key)
+
+
+def continue_orderMsg2(topic,serverAndPort,flag,pattern,key):
+    print(f'{topic},{serverAndPort},{flag},{pattern},{key}')
+    return kafkaOper(topic,serverAndPort).getSubscribe().retrivalFlowMsg(flag,pattern,key)
+
+
+def continue_orderMultiMsg(topics=[],serverAndPorts=[],flags=[],patterns=[],keys=[]):
+
+    if type(topics)!=list or type(serverAndPorts)!=list or type(flags)!=list or type(patterns)!=list or type(keys)!=list:
+        return f'input not the type of list'
+
+    pool=ThreadPoolExecutor(len(topics))
+    all=[pool.map(continue_orderMsg2,a,b,c,d,e) for a,b,c,d,e in zip(topics,serverAndPorts,flags,patterns,keys)]
+    # print(len(all))
+    for res in all:
+        print(f"res {res}")
+        for one in res:
+            print(f"one  {one}")
+            for u in one:
+                print(f"uuu {u}")
+                yield u
+
+
+
+
 
 def general_sender(topic="",serverAndPort="localhost:9092",message=""):
     kafkaOper(topic,serverAndPort).getProducer().doSendFromProducer(message)
@@ -308,9 +426,18 @@ if __name__ == '__main__':
     # kafkaFetchServer(0,None,'192.168.2.101:9092','testTopic')
     # kafkaFetchServerWithFilter(0,None,'192.168.125.145:9092','testTopic','regx',"(\d{4}-\d{02}-\d{02})",'2022-01-04')
     # kafkaFetchServerWithFilter(0, None, '192.168.2.101:9092', 'testTopic', '', "",'')
-    for one in continue_orderMsg('aaa','192.168.2.101:9092','',"",''):
+
+    # for one in continue_orderMsg('aaa','192.168.2.101:9092','',"",''):
+    #     for a in one:
+    #         print(a)
+
+
+
+    for one in continue_orderMultiMsg(['bbb','ccc'], ['192.168.2.101:9092','192.168.2.101:9092'], ["",""], ["",""], ["",""]):
         for a in one:
-            print(a)
+            print(f"aaa {a}")
+            for i in a:
+                print(f"iii {i}")
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
     # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')
