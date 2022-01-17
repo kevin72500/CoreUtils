@@ -280,7 +280,7 @@ def continue_orderMsg(topic,serverAndPort,flag,pattern,key):
 
 def continue_orderMsg2(topic,serverAndPort,flag,pattern,key):
     print(f'{topic},{serverAndPort},{flag},{pattern},{key}')
-    return kafkaOper(topic,serverAndPort).getSubscribe().retrivalFlowMsg(flag,pattern,key)
+    yield kafkaOper(topic,serverAndPort).getSubscribe().retrivalFlowMsg(flag,pattern,key)
 
 
 def continue_orderMultiMsg(topics=[],serverAndPorts=[],flags=[],patterns=[],keys=[]):
@@ -291,13 +291,10 @@ def continue_orderMultiMsg(topics=[],serverAndPorts=[],flags=[],patterns=[],keys
     pool=ThreadPoolExecutor(len(topics))
     all=[pool.map(continue_orderMsg2,a,b,c,d,e) for a,b,c,d,e in zip(topics,serverAndPorts,flags,patterns,keys)]
     # print(len(all))
-    for res in all:
-        print(f"res {res}")
-        for one in res:
-            print(f"one  {one}")
-            for u in one:
-                print(f"uuu {u}")
-                yield u
+    for ttt in all:
+        print(f"ttt {ttt}")
+        yield ttt
+
 
 
 
@@ -434,9 +431,10 @@ if __name__ == '__main__':
 
 
     for one in continue_orderMultiMsg(['bbb','ccc'], ['192.168.2.101:9092','192.168.2.101:9092'], ["",""], ["",""], ["",""]):
-        for a in one:
-            print(f"aaa {a}")
-            for i in a:
+        print(f"one {one}")
+        for m in one:
+            print(f"mmm {m}")
+            for i in t:
                 print(f"iii {i}")
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
