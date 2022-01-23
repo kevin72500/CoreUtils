@@ -12,6 +12,7 @@ from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.xmind2excel import makeCase
 from core.utils import swagger2jmeter,CFacker,getDateTime
+from core.mqttUtil import NormalMqttGetter
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
 from multiprocessing import Process
@@ -26,7 +27,7 @@ def myapp():
     '''
     session.set_env(title='testToolKit')
 
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作"])
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作","mqtt操作"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -40,6 +41,8 @@ def myapp():
         myFackData()
     elif select_type=="kafka操作":
         kafkaListener()
+    elif select_type=="mqtt操作":
+        mqttListener()
 
 
 def jmeterScriptGen():
@@ -653,7 +656,22 @@ def kafkaListener():
                     put_text(f"{getDateTime()} : {data['topic']} --> {a}")
                 # print(a)
 
+def mqttListener():
+    session.set_env(title='testTools')
 
+    select_type = select("选择监听的mqtt服务:",["自定义服务","本地固定服务(待定)"])
+    if select_type=="自定义服务":
+        data = input_group("mqtt信息",[
+            input("mqtt主机，必填", name="host"),
+            input("mqtt端口，必填", name="port"),
+            input("mqtt topic，必填",name="topic"),
+            input("mqtt用户", name="user"),
+            input("mqtt密码", name="passwd"),
+            ])
+        NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=put_text)
+    elif select_type == "本地固定服务(待定)":
+        put_text('未暴露')
+    # NormalMqttGetter(host='127.0.0.1',port=1883,topic='fifa').getClient(func=put_text)
 
 # @session.defer_call
 # def clean():
@@ -670,6 +688,7 @@ def kafkaListener():
 
 if __name__ == '__main__':
     start_server(myapp, port=8899)
+    # mqttListener()
     # print(session.info["server_host"].split(":")[0])
     # kafkaListener()
     # myFackData()
