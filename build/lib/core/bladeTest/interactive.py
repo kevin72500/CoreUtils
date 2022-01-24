@@ -11,7 +11,8 @@ from pywebio.output import close_popup, output, put_file, put_html, put_image, p
 from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.xmind2excel import makeCase
-from core.utils import swagger2jmeter,CFacker
+from core.utils import swagger2jmeter,CFacker,getDateTime
+from core.mqttUtil import NormalMqttGetter
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
 from multiprocessing import Process
@@ -20,9 +21,13 @@ import json
 
 
 def myapp():
+    '''
+    this main function for enter the whole functions of pywebio
+    :return:
+    '''
     session.set_env(title='testToolKit')
 
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作"])
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作","mqtt操作"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -36,9 +41,15 @@ def myapp():
         myFackData()
     elif select_type=="kafka操作":
         kafkaListener()
+    elif select_type=="mqtt操作":
+        mqttListener()
 
 
 def jmeterScriptGen():
+    '''
+    this just invoke the lib for generate jmeter script
+    :return:
+    '''
     session.set_env(title='testToolKit')
     url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
     # print(url)
@@ -47,6 +58,10 @@ def jmeterScriptGen():
 
 
 def uploadXmind():
+    '''
+    generate excel of test case from a xmind file
+    :return:
+    '''
     session.set_env(title='testToolKit')
     # Upload a file and save to server      
     img = open('xmindStructure.jpg', 'rb').read()  
@@ -63,6 +78,10 @@ def uploadXmind():
 
 
 def onePageInput():
+    '''
+    using formated json script to generate the blade test and run it
+    :return:
+    '''
     session.set_env(title='testToolKit')
     put_markdown('''# 基础指令参考：
         ## blade create cpu load [flags]
@@ -185,6 +204,10 @@ def onePageInput():
 
 
 def oneCheck():
+    '''
+    using step by step way to execute blade test
+    :return:
+    '''
     session.set_env(title='testToolKit')
     input_data={"data":[]}
     temp_data={}
@@ -364,6 +387,11 @@ def oneCheck():
             
 
 def runAndGetReport(input_data):
+    '''
+    generate blade test report
+    :param input_data:
+    :return:
+    '''
     session.set_env(title='testToolKit')
     popup(title="注意",content="正在运行测试。。。") 
     url=generateHtmlReport(running(jf=input_data))
@@ -375,6 +403,11 @@ def runAndGetReport(input_data):
 
 
 def run(portNum=8899):
+    '''
+    running application by command
+    :param portNum:
+    :return:
+    '''
     start_server(myapp, port=portNum)
 
 
@@ -386,6 +419,10 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def myFackData():
+    '''
+    generate the fake data by using this app, when you test
+    :return:
+    '''
     session.set_env(title='testToolKit')
     all_options={
     "city_suffix":"市，县",
@@ -535,6 +572,10 @@ def myFackData():
     put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
 
 def kafkaListener():
+    '''
+    to send kafka message or listener the kafka topic
+    :return:
+    '''
     session.set_env(title='testTools')
 
     select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息"])
@@ -611,10 +652,26 @@ def kafkaListener():
         # put_link(name='点击kafka连接，开始接收消息',url=f"http://{ip}:8899/kafka?portNum={portNum}&ip={ip}")
         for one in continue_orderMsg(data['topic'], data['address'], data['filter'], data['pattern'], data['key']):
             for a in one:
-                put_text(a)
+                if a is not None:
+                    put_text(f"{getDateTime()} : {data['topic']} --> {a}")
                 # print(a)
 
+def mqttListener():
+    session.set_env(title='testTools')
 
+    select_type = select("选择监听的mqtt服务:",["自定义服务","本地固定服务(待定)"])
+    if select_type=="自定义服务":
+        data = input_group("mqtt信息",[
+            input("mqtt主机，必填", name="host"),
+            input("mqtt端口，必填", name="port"),
+            input("mqtt topic，必填",name="topic"),
+            input("mqtt用户", name="user"),
+            input("mqtt密码", name="passwd"),
+            ])
+        NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=put_text)
+    elif select_type == "本地固定服务(待定)":
+        put_text('未暴露')
+    # NormalMqttGetter(host='127.0.0.1',port=1883,topic='fifa').getClient(func=put_text)
 
 # @session.defer_call
 # def clean():
@@ -631,6 +688,7 @@ def kafkaListener():
 
 if __name__ == '__main__':
     start_server(myapp, port=8899)
+    # mqttListener()
     # print(session.info["server_host"].split(":")[0])
     # kafkaListener()
     # myFackData()
