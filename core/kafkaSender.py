@@ -36,14 +36,15 @@ from random import randint
 
 def continueSend():
     while True:
-        server="192.168.1.4:9092"
-        time.sleep(2)
+        server="127.0.0.1:9092"
+        time.sleep(5)
         num=datetime.datetime.now()
         msg={"data":{"date":"2021-01-15"}}
 
-        general_sender('uu',server,json.dumps(msg))
-        general_sender('vv', server, 'bbb'+str(num))
-        general_sender('dd', server, 'ccc'+str(num))
+        general_sender('test2',server,json.dumps(msg))
+        print(f"{msg} sent")
+        # general_sender('vv', server, 'bbb'+str(num))
+        # general_sender('dd', server, 'ccc'+str(num))
 
 if __name__=="__main__":
     # kafkaUi()
