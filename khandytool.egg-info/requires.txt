@@ -18,3 +18,4 @@ Werkzeug==2.0.2
 paho-mqtt==1.5.1
 pycrypto==2.6.1
 msgpack==1.0.3
+redis==4.1.3
