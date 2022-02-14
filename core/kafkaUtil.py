@@ -92,7 +92,7 @@ class kafkaOper(object):
                 logger.error(f'{allStr}')
         else:
             logger.error(f"{allStr} isn't a string.")
-            return allStr
+            return False
 
     def returnRegxFilter(self,allStr,pattern, key):
         '''
@@ -115,6 +115,7 @@ class kafkaOper(object):
         except Exception as e:
             logger.error('regx 解析失败')
             logger.error(f'{allStr}') 
+            return False
 
     def regxFilter(self,allStr,pattern, key):
         '''
@@ -261,8 +262,12 @@ class kafkaOper(object):
                     else:
                         yield one.value.decode()
     
-    def getFromTimeStamp(self,timestamp_ms):
-        '''search from timestamp_ms'''
+    def getFromTimeStamp(self,minutes=1,flag="",pattern="",key=""):
+        '''search from timestamp_ms, minuts 1 means 1 mins ago'''
+        print('in getFromTimeStamp')
+        resList=[]
+        timestamp_ms=round(datetime.datetime.timestamp(datetime.datetime.now()+datetime.timedelta(minutes=-minutes))*1000)
+        print(timestamp_ms)
         try:
             # topic = 'my_favorite_topic'
             # bootstrap_servers = 'localhost:9092'
@@ -278,15 +283,43 @@ class kafkaOper(object):
 
             # return consumer
             for msg in self.kafkaConnection:
-                # print(msg.value.decode())
-                if searchStr in msg.value.decode():
-                    print(msg.value.decode())
+                (res,origStr)=self.checkFromTimeStamp(msg, flag, pattern, key)
+                if res==True:
                     self.kafkaConnection.close()
-                    return True
-
+                    return True, origStr
+                else:
+                    return False, origStr 
+                # print(msg.value.decode())
+                # if searchStr in msg.value.decode():
+                #     print(msg.value.decode())
+                #     self.kafkaConnection.close()
+                #     return True
+                # yield msg.value.decode()
+            #     resList.append(msg.value.decode())
+            #     print(resList)
+            # return resList
         except AssertionError:
             # Unassigned partition
             return seek_offsets_for_timestamp(timestamp)
+
+    def checkFromTimeStamp(self,one,flag,pattern,key):
+        '''check data from timestamp'''
+        print('in checkFromTimeStamp')
+        if flag=="json":
+            if self.returnJsonFilter(one, pattern, key)!=False:
+                return True, one.value.decode()
+            else:
+                return False, one.value.decode()
+        elif flag=="regx":
+            if self.returnRegxFilter(one, pattern, key)!=False:
+                return True, one.value.decode()
+            else:
+                return False, one.value.decode()
+        elif flag=="contain":
+            if key in one.value.decode():
+                return True, one.value.decode()
+
+        
 
 def general_orderMsg(topic,serverAndPort,interval_ms,getNum,callbackFlag=False,callbackFuc=None):
     if callbackFlag==False:
@@ -469,6 +502,8 @@ if __name__ == '__main__':
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
     # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')
     import time
-    k=kafkaOper(topic='test1',bootstrapserver='127.0.0.1:9092')
-    t=datetime.datetime.timestamp(datetime.datetime.now()+datetime.timedelta(minutes=-1))
-    k.getFromTimeStamp(round(t*1000))
+    k=kafkaOper(topic='test2',bootstrapserver='127.0.0.1:9092')
+    # t=datetime.datetime.timestamp(datetime.datetime.now()+datetime.timedelta(minutes=-1))
+    # for one in k.getFromTimeStamp(round(2)):
+    #     print(one)
+    print(k.getFromTimeStamp(1, flag="contain", pattern="", key="data"))

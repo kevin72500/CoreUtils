@@ -2,6 +2,7 @@ import datetime
 import json
 import threading
 from kafka import KafkaConsumer,KafkaProducer
+from kafka.structs import TopicPartition
 from kafka.client_async import KafkaClient
 from core.utils import isJson
 import jmespath
@@ -91,7 +92,7 @@ class kafkaOper(object):
                 logger.error(f'{allStr}')
         else:
             logger.error(f"{allStr} isn't a string.")
-            return allStr
+            return False
 
     def returnRegxFilter(self,allStr,pattern, key):
         '''
@@ -114,6 +115,7 @@ class kafkaOper(object):
         except Exception as e:
             logger.error('regx 解析失败')
             logger.error(f'{allStr}') 
+            return False
 
     def regxFilter(self,allStr,pattern, key):
         '''
@@ -259,7 +261,65 @@ class kafkaOper(object):
                         yield self.returnRegxFilter(one, pattern, key)
                     else:
                         yield one.value.decode()
+    
+    def getFromTimeStamp(self,minutes=1,flag="",pattern="",key=""):
+        '''search from timestamp_ms, minuts 1 means 1 mins ago'''
+        print('in getFromTimeStamp')
+        resList=[]
+        timestamp_ms=round(datetime.datetime.timestamp(datetime.datetime.now()+datetime.timedelta(minutes=-minutes))*1000)
+        print(timestamp_ms)
+        try:
+            # topic = 'my_favorite_topic'
+            # bootstrap_servers = 'localhost:9092'
+            # consumer = KafkaConsumer(topic=self.topic, bootstrap_servers=self.bootstrapserver, auto_offset_reset='earliest')
+            self.getConsumer(auto_offset_reset='earliest')
+            # 通过主题获取分区集
+            partition_set = self.kafkaConnection.partitions_for_topic(self.topic)
+            # 通过主题和分区根据时间戳获取相应的偏移量
+            offsets = self.kafkaConnection.offsets_for_times({TopicPartition(self.topic, partition): timestamp_ms for partition in partition_set})
+            # 手动偏移
+            for partition, oat in offsets.items():
+                self.kafkaConnection.seek(partition, oat.offset)
 
+            # return consumer
+            for msg in self.kafkaConnection:
+                (res,origStr)=self.checkFromTimeStamp(msg, flag, pattern, key)
+                if res==True:
+                    self.kafkaConnection.close()
+                    return True, origStr
+                else:
+                    return False, origStr 
+                # print(msg.value.decode())
+                # if searchStr in msg.value.decode():
+                #     print(msg.value.decode())
+                #     self.kafkaConnection.close()
+                #     return True
+                # yield msg.value.decode()
+            #     resList.append(msg.value.decode())
+            #     print(resList)
+            # return resList
+        except AssertionError:
+            # Unassigned partition
+            return seek_offsets_for_timestamp(timestamp)
+
+    def checkFromTimeStamp(self,one,flag,pattern,key):
+        '''check data from timestamp'''
+        print('in checkFromTimeStamp')
+        if flag=="json":
+            if self.returnJsonFilter(one, pattern, key)!=False:
+                return True, one.value.decode()
+            else:
+                return False, one.value.decode()
+        elif flag=="regx":
+            if self.returnRegxFilter(one, pattern, key)!=False:
+                return True, one.value.decode()
+            else:
+                return False, one.value.decode()
+        elif flag=="contain":
+            if key in one.value.decode():
+                return True, one.value.decode()
+
+        
 
 def general_orderMsg(topic,serverAndPort,interval_ms,getNum,callbackFlag=False,callbackFuc=None):
     if callbackFlag==False:
@@ -430,15 +490,20 @@ if __name__ == '__main__':
 
 
 
-    for one in continue_orderMultiMsg(['bbb','ccc'], ['192.168.2.101:9092','192.168.2.101:9092'], ["",""], ["",""], ["",""]):
-        print(f"one {one}")
-        for m in one:
-            print(f"mmm {m}")
-            for i in t:
-                print(f"iii {i}")
+    # for one in continue_orderMultiMsg(['bbb','ccc'], ['192.168.2.101:9092','192.168.2.101:9092'], ["",""], ["",""], ["",""]):
+    #     print(f"one {one}")
+    #     for m in one:
+    #         print(f"mmm {m}")
+    #         for i in t:
+    #             print(f"iii {i}")
+
+
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
     # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')
-
-    # k=kafkaOper(topic='ab',bootstrapserver='ab')
-    # k.regxFilter("abb555bbc","abb(.*)bbc","555")
+    import time
+    k=kafkaOper(topic='test2',bootstrapserver='127.0.0.1:9092')
+    # t=datetime.datetime.timestamp(datetime.datetime.now()+datetime.timedelta(minutes=-1))
+    # for one in k.getFromTimeStamp(round(2)):
+    #     print(one)
+    print(k.getFromTimeStamp(1, flag="contain", pattern="", key="data"))
