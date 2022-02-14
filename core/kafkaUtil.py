@@ -300,6 +300,7 @@ class kafkaOper(object):
             # return resList
         except AssertionError:
             # Unassigned partition
+            self.kafkaConnection.close()
             return seek_offsets_for_timestamp(timestamp)
 
     def checkFromTimeStamp(self,one,flag,pattern,key):
