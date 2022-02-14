@@ -9,6 +9,62 @@ from loguru import logger
 from functools import wraps
 import os
 import json
+import re
+
+def jsonFilter(oriStr,flag,pattern,key):
+    if isJson(str(oriStr)):
+        try:
+            allStr = json.loads(oriStr)
+            flag=jmespath.search(pattern,allStr)
+            if flag in key:
+                return True, allStr
+        except Exception as e:
+            logger.error('json 解析失败')
+            logger.error(f'{allStr}')
+            return False, allStr
+    else:
+        logger.error(f"{allStr} isn't a string.")
+        return False, allStr
+
+def regxFilter(oriStr,flag,pattern,key):
+    try:
+        allStr = oriStr
+        flag=re.compile(pattern)
+        res=flag.findall(allStr)
+        if key in "".join(res):
+            return True, allStr
+        return False, allStr
+    except Exception as e:
+        logger.error('regx 解析失败')
+        logger.error(f'{allStr}') 
+        return False, allStr
+
+def containFilter(oriStr,key):
+    try:
+        if key in oriStr:
+            return True, oriStr
+        else:
+            return False, oriStr
+    except Exception as e:
+        logger.error('contain 错误')
+        return False, oriStr
+
+def checkStr(oriStr,flag,pattern,key):
+        if flag=="json":
+            if jsonFilter(oriStr, flag, pattern, key)[0]!=False:
+                return True
+            else:
+                return False
+        elif flag=="regx":
+            if regxFilter(oriStr, flag, pattern, key)[0]!=False:
+                return True
+            else:
+                return False
+        elif flag=="contain":
+            if containFilter(oriStr, key)[0]!=False:
+                return True
+            else:
+                return False
 
 def getFromList(input_list=[],list_index=0):
     if len(input_list)==1:
