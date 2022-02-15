@@ -11,6 +11,37 @@ import os
 import json
 import re
 
+def findBy(oriStr,flag="",pattern=""):
+    if flag=="json":
+        if isJson(str(oriStr)):
+            try:
+                allStr = json.loads(oriStr)
+                flag=jmespath.search(pattern,allStr)
+                if flag:
+                    return flag
+                else:
+                    return False
+            except Exception as e:
+                logger.error('json 解析失败')
+                return False  
+    elif flag=="regx":
+        try:
+            allStr = oriStr
+            flag=re.compile(pattern)
+            res=flag.findall(allStr)
+            targetStr="".join(res)
+            if targetStr:
+                return targetStr
+            else:
+                return False
+        except Exception as e:
+            logger.error('regx 解析失败')
+            return False
+    else:
+        logger.error(f'无此{flag}解析方式')
+
+
+
 def jsonFilter(oriStr,flag,pattern,key):
     if isJson(str(oriStr)):
         try:

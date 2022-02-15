@@ -1,14 +1,17 @@
 import requests
 from loguru import logger
-from core.utils import jsonFilter,regxFilter,containFilter
+from core.utils import jsonFilter,regxFilter,containFilter,findBy
 class HttpOper:
     def __init__(self):
         """session管理器, 后续引入登录或者token处理"""
         self.session = requests.session()
         self.res=None
+        self.exportParam={}
+
     def call(self, method, url, params=None, data=None, json=None, headers=None, **kwargs):
         self.res=self.session.request(method,url, params=params, data=data, json=json, headers=headers,**kwargs)
         return self
+
     def resCheck(self,flag="",pattern="",key=""):
         logger.info(f'oriStr is: {self.res.text}')
         if flag=='json':
@@ -23,6 +26,15 @@ class HttpOper:
             if not containFilter(self.res.text, key)[0]:
                 return False
             return True
+
+    def resCorrelate(self,paramName,flag="",pattern=""):
+        logger.info(f'oriStr is: {self.res.text}')
+        temp=findBy(self.res.text,flag=flag,pattern=pattern)
+        if temp!=False:
+            self.exportParam[paramName]=temp
+        else:
+            logger.warning(f'can not get param by pattern {pattern}')
+
     def getRes(self):
         return self.res
         
