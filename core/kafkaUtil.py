@@ -13,7 +13,7 @@ import websockets
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-logger.add('kafkaUtil_log.txt',encoding='utf-8')
+logger.add('run_log.txt',encoding='utf-8')
 
 class kafkaOper(object):
     '''
