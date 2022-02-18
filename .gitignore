@@ -16,3 +16,7 @@ build/*
 test_mqtt_command.py
 mqtt_generate_case.py
 chart.py
+jmeter.log
+*.log
+*.jmx
+*.har
