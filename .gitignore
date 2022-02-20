@@ -22,3 +22,5 @@ jmeter.log
 *.har
 run_log.txt
 urlAndData.txt
+*.xmind
+*.xlsx

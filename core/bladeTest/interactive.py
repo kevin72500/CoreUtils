@@ -33,22 +33,23 @@ def myapp():
     session.set_env(title='testToolKit')
 
     select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","jmeter脚本生成","假数据构造","kafka操作","mqtt操作"])
-
-    if select_type=="xmind转excel":
-        uploadXmind()
-    elif select_type=="混沌测试-交互式":
-        oneCheck()
-    elif select_type=="混沌测试-直接输入(推荐)":
-        onePageInput()
-    elif select_type=="jmeter脚本生成":
-        jmeterScriptGen()
-    elif select_type=="假数据构造":
-        myFackData()
-    elif select_type=="kafka操作":
-        kafkaListener()
-    elif select_type=="mqtt操作":
-        mqttListener()
-
+    try:
+        if select_type=="xmind转excel":
+            uploadXmind()
+        elif select_type=="混沌测试-交互式":
+            oneCheck()
+        elif select_type=="混沌测试-直接输入(推荐)":
+            onePageInput()
+        elif select_type=="jmeter脚本生成":
+            jmeterScriptGen()
+        elif select_type=="假数据构造":
+            myFackData()
+        elif select_type=="kafka操作":
+            kafkaListener()
+        elif select_type=="mqtt操作":
+            mqttListener()
+    except Exception as e:
+        put_text(e)
 
 def jmeterScriptGen():
     '''
@@ -67,7 +68,7 @@ def jmeterScriptGen():
         open('temp.har', 'wb').write(f['content'])
         har2jmeter('temp.har')
         location=os.path.abspath('.')+os.path.sep+"autoGen.jmx"
-        put_file(content=open(location,mode="rb").read(),name="autoGen.har",label="点击下载jmeter脚本")
+        put_file(content=open(location,mode="rb").read(),name="autoGen.jmx",label="点击下载jmeter脚本")
         
 
 
