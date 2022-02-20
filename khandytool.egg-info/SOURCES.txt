@@ -14,6 +14,11 @@ core/bladeTest/app.py
 core/bladeTest/interactive.py
 core/bladeTest/main.py
 core/bladeTest/versionSuggestion.py
+core/jmeterTool/__init__.py
+core/jmeterTool/har2jmeter.py
+core/jmeterTool/swagger2jmeter.py
+core/jmeterTool/har2jmeter_utils/__init__.py
+core/jmeterTool/har2jmeter_utils/templates/jmeter.jinja
 khandytool.egg-info/PKG-INFO
 khandytool.egg-info/SOURCES.txt
 khandytool.egg-info/dependency_links.txt

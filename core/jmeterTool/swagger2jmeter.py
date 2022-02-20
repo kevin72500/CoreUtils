@@ -1,3 +1,9 @@
+import random,time
+import os,sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 from swaggerjmx.convert import conversion
 from swaggerjmx.settings import Settings as ST
 import traceback

@@ -1,17 +1,22 @@
-import random
-import sys
-import os,time
+import random,time
+import os,sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 # print("###"+os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 # print("###"+os.path.abspath(os.path.dirname(os.getcwd())))
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 # sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
 from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
+from core.jmeterTool.swagger2jmeter import swagger2jmeter
+from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
-from core.utils import swagger2jmeter,CFacker,getDateTime
+from core.utils import CFacker,getDateTime
 from core.mqttUtil import NormalMqttGetter
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
@@ -27,7 +32,7 @@ def myapp():
     '''
     session.set_env(title='testToolKit')
 
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","swagger地址转换jmeter脚本","假数据构造","kafka操作","mqtt操作"])
+    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","jmeter脚本生成","假数据构造","kafka操作","mqtt操作"])
 
     if select_type=="xmind转excel":
         uploadXmind()
@@ -35,7 +40,7 @@ def myapp():
         oneCheck()
     elif select_type=="混沌测试-直接输入(推荐)":
         onePageInput()
-    elif select_type=="swagger地址转换jmeter脚本":
+    elif select_type=="jmeter脚本生成":
         jmeterScriptGen()
     elif select_type=="假数据构造":
         myFackData()
@@ -51,10 +56,19 @@ def jmeterScriptGen():
     :return:
     '''
     session.set_env(title='testToolKit')
-    url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
-    # print(url)
-    location=swagger2jmeter(url)
-    put_file(content=open(location,mode="rb").read(),name=location.split(os.sep)[-1],label="点击下载jmeter脚本")
+    select_type = select("选择你要做的操作:",["swagger转jmeter脚本","har转jmeter脚本"])
+    if select_type=="swagger转jmeter脚本":
+        url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
+        # print(url)
+        location=swagger2jmeter(url)
+        put_file(content=open(location,mode="rb").read(),name=location.split(os.sep)[-1],label="点击下载jmeter脚本")
+    elif select_type=="har转jmeter脚本":
+        f = file_upload("上传har文件，可以从fidder, charlse, chrome开发者工具中导出",accept="*.har",placeholder='选择har文件')
+        open('temp.har', 'wb').write(f['content'])
+        har2jmeter('temp.har')
+        location=os.path.abspath('.')+os.path.sep+"autoGen.jmx"
+        put_file(content=open(location,mode="rb").read(),name="autoGen.har",label="点击下载jmeter脚本")
+        
 
 
 def uploadXmind():

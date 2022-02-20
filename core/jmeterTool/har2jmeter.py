@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 # coding=UTF-8
+import random,time
+import os,sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 import json, codecs, re, argparse
 
-from har2jmeter_utils import loadTemplate 
+from core.jmeterTool.har2jmeter_utils import loadTemplate 
 import datetime, time
+
+
+
 
 def har2jmeter(harfile):
     hardata = codecs.open(harfile, 'r', 'utf-8-sig').read()
@@ -14,8 +23,8 @@ def har2jmeter(harfile):
     urls = [url for url in urls if not url is None]
     # urls = [url for url in urls if targetUrl in url]
     template = loadTemplate()
-    t=datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d%H%M%S")
-    fh=open('autoGen'+t+'.jmx','w',encoding='utf-8')
+    # t=datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d%H%M%S")
+    fh=open('autoGen.jmx','w',encoding='utf-8')
     fh.writelines(template.render(urls=urls))
     fh.close()
 
@@ -59,18 +68,16 @@ def urlparts2(harrequest):
     else:
         params=dict(onlyone=harrequest['postData']['text'].replace('"',"&quot;"))
     
-    f=open('urlAndData.txt','a+',encoding='utf-8')
-    f.writelines(url+"\n")
-    f.writelines(harrequest['postData']['text']+"\n")
-    f.close()
+    # f=open('urlAndData.txt','a+',encoding='utf-8')
+    # f.writelines(url+"\n")
+    # f.writelines(harrequest['postData']['text']+"\n")
+    # f.close()
 
     method=harrequest['method']
 
     # pathstart = re.search(host+":"+port, url).end()
     pathstart=url.find("/")
     path = url[pathstart:]
-
-
     return {'url': url, 'host': host, 'path': path, 'params': params, 'method':method,'port':port}
 
 

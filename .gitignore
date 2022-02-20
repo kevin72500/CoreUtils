@@ -20,3 +20,5 @@ jmeter.log
 *.log
 *.jmx
 *.har
+run_log.txt
+urlAndData.txt
