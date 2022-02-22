@@ -61,13 +61,24 @@ def jmeterScriptGen():
     if select_type=="swagger转jmeter脚本":
         url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
         # print(url)
-        location=swagger2jmeter(url)
-        put_file(content=open(location,mode="rb").read(),name=location.split(os.sep)[-1],label="点击下载jmeter脚本")
+        location=os.path.join(sys.exec_prefix, 'jmx')+os.sep
+        print(location)
+        swagger2jmeter(url,location)
+        file_location=None
+        # location=os.path.abspath(os.path.dirname(__file__))+os.sep+'jmx'+os.sep
+        print(location)
+        for x,y,z in os.walk(location):
+            file_location=location+"".join(z)
+            break
+        print(file_location)
+        put_file(content=open(file_location,mode="rb").read(),name=file_location.split(os.sep)[-1],label="点击下载jmeter脚本")
+        os.remove(file_location)
     elif select_type=="har转jmeter脚本":
         f = file_upload("上传har文件，可以从fidder, charlse, chrome开发者工具中导出",accept="*.har",placeholder='选择har文件')
         open('temp.har', 'wb').write(f['content'])
         har2jmeter('temp.har')
         location=os.path.abspath('.')+os.path.sep+"autoGen.jmx"
+        print(location)
         put_file(content=open(location,mode="rb").read(),name="autoGen.jmx",label="点击下载jmeter脚本")
         
 

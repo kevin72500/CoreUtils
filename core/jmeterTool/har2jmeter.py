@@ -14,6 +14,8 @@ import datetime, time
 
 
 
+
+
 def har2jmeter(harfile):
     hardata = codecs.open(harfile, 'r', 'utf-8-sig').read()
     har = json.loads(hardata,encoding='utf-8-sig')
@@ -24,6 +26,8 @@ def har2jmeter(harfile):
     # urls = [url for url in urls if targetUrl in url]
     template = loadTemplate()
     # t=datetime.datetime.strftime(datetime.datetime.now(), "%Y%m%d%H%M%S")
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    
     fh=open('autoGen.jmx','w',encoding='utf-8')
     fh.writelines(template.render(urls=urls))
     fh.close()

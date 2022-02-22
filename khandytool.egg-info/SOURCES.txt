@@ -14,6 +14,7 @@ core/bladeTest/app.py
 core/bladeTest/interactive.py
 core/bladeTest/main.py
 core/bladeTest/versionSuggestion.py
+core/bladeTest/jmx/jmeter-Tacos-auth服务 RESTful APIs.jmx
 core/jmeterTool/__init__.py
 core/jmeterTool/har2jmeter.py
 core/jmeterTool/swagger2jmeter.py

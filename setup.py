@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="khandytool",
-    version="0.2.43",
+    version="0.2.44",
     author="Ou Peng",
     author_email="kevin72500@qq.com",
     description="khandytool, handy core in testing",
@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/kevin72500/khandytool",
     packages=setuptools.find_packages(),
-    package_data={'core.jmeterTool.har2jmeter_utils': ['templates/*']},
+    package_data={'core.jmeterTool.har2jmeter_utils': ['templates/*'],'core.bladeTest': ['jmx/*']},
     install_requires=['fabric==2.6.0','pytest==6.2.5','pywebio==1.4.0','requests==2.26.0','loguru==0.5.3','jinja2==3.0.2','openpyxl==3.0.9','xmindparser==1.0.9','jmespath==0.10.0','pymysql==1.0.2','swaggerjmx==1.0.9','faker==8.12.1','websockets==10.1','pywebio==1.4.0','kafka-python==2.0.2','flask==2.0.2','Werkzeug==2.0.2','paho-mqtt==1.5.1','pycrypto==2.6.1','msgpack==1.0.3','redis==4.1.3','python-dotenv==0.19.2'],
     entry_points={
         'console_scripts': [
