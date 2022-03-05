@@ -90,7 +90,11 @@ def uploadXmind():
     '''
     session.set_env(title='testToolKit')
     # Upload a file and save to server      
-    img = open('xmindStructure.jpg', 'rb').read()  
+    print(os.path.abspath(os.path.dirname(__file__)))
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    rootPath = os.path.split(curPath)[0]
+
+    img = open(os.path.join(curPath,'xmindStructure.jpg'), 'rb').read()  
     put_image(img)              
     f = file_upload("上传xmind文件，注意xmind节点中不要有特殊字符，空的节点使用NA标记",accept="*.xmind",placeholder='选择xmind文件')                  
     # open('asset/'+f['filename'], 'wb').write(f['content'])  
