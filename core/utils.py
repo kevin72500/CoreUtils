@@ -532,6 +532,6 @@ def makeCase(xmindPath,excelName):
 
 
 if __name__=='__main__':
-    pass
+    print(CFacker().get_it("month"))
     # print(swagger2jmeter("http://192.168.118.168:12812/space/v2/api-docs"))
     
