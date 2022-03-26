@@ -3,6 +3,8 @@ from loguru import logger
 from core.utils import jsonFilter,regxFilter,containFilter,findBy
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(verbose=True)
+
+g_exportParam={}
 class HttpOper:
     def __init__(self):
         """session管理器, 后续引入登录或者token处理"""
