@@ -19,18 +19,21 @@ class HttpOper:
 
     def resCheck(self,flag="",pattern="",key=""):
         logger.info(f'oriStr : {self.res.text}')
-        if flag=='json':
-            if not jsonFilter(self.res.text, flag, pattern, key)[0]:
-                return False
-            return True
-        if flag=="regx":
-            if not regxFilter(self.res.text, flag, pattern, key)[0]:
-                return False
-            return True
-        if flag=="contain":
-            if not containFilter(self.res.text, key)[0]:
-                return False
-            return True
+        if self.res:
+            if flag=='json':
+                if not jsonFilter(self.res.text, flag, pattern, key)[0]:
+                    return False
+                return True
+            if flag=="regx":
+                if not regxFilter(self.res.text, flag, pattern, key)[0]:
+                    return False
+                return True
+            if flag=="contain":
+                if not containFilter(self.res.text, key)[0]:
+                    return False
+                return True
+        else:
+            logger.error('please run call() first')
 
     def setExportParam(self,paramName,flag="",pattern=""):
         logger.info(f'oriStr is: {self.res.text}')
@@ -46,6 +49,9 @@ class HttpOper:
     
     def getExportParam(self,key):
         return self.exportParam[key]
+
+    def updateExportParam(self,key,value):
+        self.exportParam[key]=value
 
     def close_session(self):
         """关闭session"""
