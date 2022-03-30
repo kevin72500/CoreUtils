@@ -3,13 +3,13 @@ import os,sys
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
-
+from time import sleep
 # print("###"+os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 # print("###"+os.path.abspath(os.path.dirname(os.getcwd())))
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 # sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
-from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox
+from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox,radio
 from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
 from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
@@ -615,9 +615,17 @@ def kafkaListener():
             input("kafka topic，必填", name="topic"),
             input("kafka 地址，如ip:port，必填", name="address"),
             input("要发送的消息，必填",name="msg"),
+            input("发送频率（秒），非必填",name="interval",value="3"),
+            radio(label="持续发送",name="always",inline='true',options=('是','否'),value=('否'))
             ])
-        general_sender(data['topic'],data['address'],data['msg'])
-        put_text('发送完成')
+        if data['always']=="否":
+            general_sender(data['topic'],data['address'],data['msg'])
+            put_text('发送完成')
+        elif data['always']=="是":
+            while True:
+                general_sender(data['topic'],data['address'],data['msg'])
+                put_text('发送完成')
+                sleep(int(data['interval']))
     # elif select_type=="kafka接收固定消息":
     #     data = input_group("kafka连接配置",[
     #         input("kafka topic，必填", name="topic"),

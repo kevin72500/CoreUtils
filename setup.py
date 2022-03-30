@@ -1,8 +1,8 @@
 import setuptools
 import platform
 
-win_requires=['fabric==2.6.0','pytest==6.2.5','pywebio==1.4.0','requests==2.26.0','loguru==0.5.3','jinja2==3.0.2','openpyxl==3.0.9','xmindparser==1.0.9','jmespath==0.10.0','pymysql==1.0.2','swaggerjmx==1.0.9','faker==8.12.1','websockets==10.1','pywebio==1.4.0','kafka-python==2.0.2','flask==2.0.2','Werkzeug==2.0.2','paho-mqtt==1.5.1','pycryptodome==3.12.0','msgpack==1.0.3','redis==4.1.3','python-dotenv==0.19.2','jsonschema']
-linux_requires=['fabric==2.6.0','pytest==6.2.5','pywebio==1.4.0','requests==2.26.0','loguru==0.5.3','jinja2==3.0.2','openpyxl==3.0.9','xmindparser==1.0.9','jmespath==0.10.0','pymysql==1.0.2','swaggerjmx==1.0.9','faker==8.12.1','websockets==10.1','pywebio==1.4.0','kafka-python==2.0.2','flask==2.0.2','Werkzeug==2.0.2','paho-mqtt==1.5.1','pycrypto==2.6.1','msgpack==1.0.3','redis==4.1.3','python-dotenv==0.19.2','jsonschema']
+win_requires=['fabric==2.6.0','pytest==6.2.5','pywebio==1.4.0','requests==2.26.0','loguru==0.5.3','jinja2==3.0.2','openpyxl==3.0.9','xmindparser==1.0.9','jmespath==0.10.0','pymysql==1.0.2','swaggerjmx==1.0.9','faker==8.12.1','websockets==10.1','pywebio==1.4.0','kafka-python==2.0.2','flask==2.0.2','Werkzeug==2.0.2','paho-mqtt==1.5.1','msgpack==1.0.3','redis==4.1.3','python-dotenv==0.19.2','jsonschema','pycryptodome']
+linux_requires=['fabric==2.6.0','pytest==6.2.5','pywebio==1.4.0','requests==2.26.0','loguru==0.5.3','jinja2==3.0.2','openpyxl==3.0.9','xmindparser==1.0.9','jmespath==0.10.0','pymysql==1.0.2','swaggerjmx==1.0.9','faker==8.12.1','websockets==10.1','pywebio==1.4.0','kafka-python==2.0.2','flask==2.0.2','Werkzeug==2.0.2','paho-mqtt==1.5.1','msgpack==1.0.3','redis==4.1.3','python-dotenv==0.19.2','jsonschema','pycrypto']
 
 if platform.system()=='Windows':
     cur_requires=win_requires
@@ -11,13 +11,14 @@ elif platform.system()=='Linux':
 elif platform.system()=='Darwin':
     cur_requires=linux_requires
 
+print(cur_requires)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="khandytool",
-    version="0.2.48",
+    version="0.2.49",
     author="Ou Peng",
     author_email="kevin72500@qq.com",
     description="khandytool, handy core in testing",

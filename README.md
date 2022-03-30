@@ -1,6 +1,5 @@
-# CoreUtil
+# Khandytool
 ## How to use it
-
 - pip install khandytool
 - from core.bladeTest import interactive
 - interactive.run(8899), you can change the port if you like

@@ -1,14 +1,13 @@
 Metadata-Version: 2.1
 Name: khandytool
-Version: 0.2.48
+Version: 0.2.49
 Summary: khandytool, handy core in testing
 Home-page: https://github.com/kevin72500/khandytool
 Author: Ou Peng
 Author-email: kevin72500@qq.com
 License: UNKNOWN
-Description: # CoreUtil
+Description: # Khandytool
         ## How to use it
-        
         - pip install khandytool
         - from core.bladeTest import interactive
         - interactive.run(8899), you can change the port if you like
