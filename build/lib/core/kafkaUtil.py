@@ -262,7 +262,7 @@ class kafkaOper(object):
                     else:
                         yield one.value.decode()
     
-    def getFromTimeStamp(self,minutes=1,flag="",pattern="",key=""):
+    def getStartFromTimeStamp(self,minutes=1,flag="",pattern="",key=""):
         '''search from timestamp_ms, minuts 1 means 1 mins ago'''
         print('in getFromTimeStamp')
         resList=[]
@@ -320,7 +320,13 @@ class kafkaOper(object):
             if key in one.value.decode():
                 return True, one.value.decode()
 
-        
+    def getFromTimeStamp(self,startTime=1648650606000,endTime=1648650906000):
+        self.getConsumer(auto_offset_reset='earliest')
+        partition_set = self.kafkaConnection.partitions_for_topic(self.topic)
+        start_offsets = self.kafkaConnection.offsets_for_times({TopicPartition(self.topic, partition): startTime for partition in partition_set})
+        end_offsets = self.kafkaConnection.offsets_for_times({TopicPartition(self.topic, partition): endTime for partition in partition_set})
+
+
 
 def general_orderMsg(topic,serverAndPort,interval_ms,getNum,callbackFlag=False,callbackFuc=None):
     if callbackFlag==False:

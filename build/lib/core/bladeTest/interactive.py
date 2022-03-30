@@ -622,9 +622,11 @@ def kafkaListener():
             general_sender(data['topic'],data['address'],data['msg'])
             put_text('发送完成')
         elif data['always']=="是":
+            counter=0
             while True:
+                counter=counter+1
                 general_sender(data['topic'],data['address'],data['msg'])
-                put_text('发送完成')
+                put_text(f"发送{counter}次, {getDateTime()}")
                 sleep(int(data['interval']))
     # elif select_type=="kafka接收固定消息":
     #     data = input_group("kafka连接配置",[

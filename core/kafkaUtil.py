@@ -1,4 +1,4 @@
-import datetime
+import datetime,time
 import json
 import threading
 from kafka import KafkaConsumer,KafkaProducer
@@ -262,7 +262,7 @@ class kafkaOper(object):
                     else:
                         yield one.value.decode()
     
-    def getFromTimeStamp(self,minutes=1,flag="",pattern="",key=""):
+    def getStartFromTimeStamp(self,minutes=1,flag="",pattern="",key=""):
         '''search from timestamp_ms, minuts 1 means 1 mins ago'''
         print('in getFromTimeStamp')
         resList=[]
@@ -320,7 +320,35 @@ class kafkaOper(object):
             if key in one.value.decode():
                 return True, one.value.decode()
 
+    def get_offset_time_window(self, begin_time, end_time):
+        partitions_structs = []
         
+        for partition_id in self.kafkaConnection.partitions_for_topic(self.topic):
+            partitions_structs.append(TopicPartition(self.topic, partition_id))
+
+        begin_search = {}
+        for partition in partitions_structs:
+            begin_search[partition] = begin_time if isinstance(begin_time, int) else self.__str_to_timestamp(begin_time)
+        begin_offset = self.kafkaConnection.offsets_for_times(begin_search)
+
+        end_search = {}
+        for partition in partitions_structs:
+            end_search[partition] = end_time if isinstance(end_time, int) else self.__str_to_timestamp(end_time)
+        end_offset = self.kafkaConnection.offsets_for_times(end_search)
+
+        for topic_partition, offset_and_timestamp in begin_offset.items():
+            b_offset = 'null' if offset_and_timestamp is None else offset_and_timestamp[0]
+            e_offset = 'null' if end_offset[topic_partition] is None else end_offset[topic_partition][0]
+            print('Between {0} and {1}, {2} offset range = [{3}, {4}]'.format(begin_time, end_time, topic_partition,
+                                                                              b_offset, e_offset))
+        return b_offset,e_offset
+
+    @staticmethod
+    def __str_to_timestamp(str_time, format_type='%Y-%m-%d %H:%M:%S'):
+        time_array = time.strptime(str_time, format_type)
+        return int(time.mktime(time_array)) * 1000
+
+
 
 def general_orderMsg(topic,serverAndPort,interval_ms,getNum,callbackFlag=False,callbackFuc=None):
     if callbackFlag==False:
@@ -502,9 +530,10 @@ if __name__ == '__main__':
 
     # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
     # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')
-    import time
-    k=kafkaOper(topic='test2',bootstrapserver='127.0.0.1:9092')
-    # t=datetime.datetime.timestamp(datetime.datetime.now()+datetime.timedelta(minutes=-1))
-    # for one in k.getFromTimeStamp(round(2)):
-    #     print(one)
-    print(k.getFromTimeStamp(1, flag="contain", pattern="", key="data"))
+    
+    # import time
+    # k=kafkaOper(topic='test2',bootstrapserver='127.0.0.1:9092')
+    # print(k.getFromTimeStamp(1, flag="contain", pattern="", key="data"))
+
+    k=kafkaOper(topic='test0330', bootstrapserver='192.168.2.103:9092').getConsumer()
+    k.get_offset_time_window(begin_time='2022-03-30 22:30:00', end_time='2022-03-30 22:35:00')
