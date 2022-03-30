@@ -341,7 +341,7 @@ class kafkaOper(object):
             e_offset = 'null' if end_offset[topic_partition] is None else end_offset[topic_partition][0]
             print('Between {0} and {1}, {2} offset range = [{3}, {4}]'.format(begin_time, end_time, topic_partition,
                                                                               b_offset, e_offset))
-        return b_offset,e_offset
+        return topic_partition,b_offset, e_offset
 
     @staticmethod
     def __str_to_timestamp(str_time, format_type='%Y-%m-%d %H:%M:%S'):
@@ -536,4 +536,28 @@ if __name__ == '__main__':
     # print(k.getFromTimeStamp(1, flag="contain", pattern="", key="data"))
 
     k=kafkaOper(topic='test0330', bootstrapserver='192.168.2.103:9092').getConsumer()
-    k.get_offset_time_window(begin_time='2022-03-30 22:30:00', end_time='2022-03-30 22:35:00')
+    par, start, end=k.get_offset_time_window(begin_time='2022-03-30 22:30:00', end_time='2022-03-30 22:35:00')
+    print(par)
+    print(type(par))
+    print(start)
+    print(end)
+    # k.kafkaConnection.assign([par])
+    k.kafkaConnection.seek(par, start)
+    for msg in k.kafkaConnection:
+        if msg.offset > end:
+            break
+        else:
+            print(msg.timestamp,msg.value)
+    # while True:
+    #     try:
+    #         value_ans = k.kafkaConnection.poll(max_records=20).values()
+    #         if value_ans>0:
+    #             for par in value_ans:
+    #                 msg_offset=int(par.offset)
+    #                 msg_partition=int(par.partition)
+    #                 msg_topic = str(par.topic)
+    #                 if par.offset==end:
+    #                     break;
+    #                 message_sets += par
+    #     except Exception as e:
+    #         print(e)
