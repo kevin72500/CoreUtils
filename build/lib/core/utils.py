@@ -3,7 +3,7 @@ import jmespath
 import hashlib
 from faker import Faker
 import time
-import datetime
+from datetime import datetime
 import pymysql
 from loguru import logger
 from functools import wraps
@@ -414,8 +414,49 @@ def getTimeStamp():
     '''
     return round(time.time() * 1000)
 
+def formatStr2Timestamp(timeStr: str, format_style='%Y-%m-%d %H:%M:%S.%f'):
+    """
+    timeStr:"2022-01-01 08:08:08.999"
+    """
+    # time_array = time.strptime(timeStr, format_type)
+    # return int(time.mktime(time_array)) * 1000
 
-def getDateTime(format="%Y-%m-%d %H:%M:%S"):
+    datetime_obj = datetime.strptime(timeStr, format_style)
+    ret_stamp = int(time.mktime(datetime_obj.timetuple()) * 1000.0 + datetime_obj.microsecond / 1000.0)
+    return ret_stamp
+
+
+def timeStampStr2FormatTime(timestamp: int, format_style='%Y-%m-%d %H:%M:%S.%f'):
+    """"
+    timestampStr:1648741273998
+    """
+    # return time.strftime(format_type,time.localtime(timestampStr))
+
+    timestamp = float(timestamp) / 1000
+    ret_datetime = datetime.utcfromtimestamp(timestamp).strftime(format_style)
+    return ret_datetime
+
+
+def timestampsCompare(bigOne: int, smarllOne: int):
+    """
+    bigOne:1648792986000
+    smarllOne:1648792990000
+    """
+    big = datetime.utcfromtimestamp(float(bigOne) / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
+    bigt = datetime.strptime(big, '%Y-%m-%d %H:%M:%S.%f')
+    # print(bigt)
+    small = datetime.utcfromtimestamp(float(smarllOne) / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
+    smallt = datetime.strptime(small, '%Y-%m-%d %H:%M:%S.%f')
+    # print(smallt)
+    dalta = bigt - smallt
+    # return dalta.milliseconds
+    return dalta.total_seconds()
+
+
+
+
+
+def getDateTime(format="%Y-%m-%d %H:%M:%S.%f"):
     '''
 
     :param format: time format
@@ -532,6 +573,8 @@ def makeCase(xmindPath,excelName):
 
 
 if __name__=='__main__':
-    print(CFacker().get_it("month"))
+    # print(CFacker().get_it("month"))
     # print(swagger2jmeter("http://192.168.118.168:12812/space/v2/api-docs"))
-    
+    print(formatStr2Timestamp("2022-04-01 08:08:08.345"))
+    print(timeStampStr2FormatTime(1648741273123))
+    timestampsCompare(1648741273123, 1648741259023)

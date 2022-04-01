@@ -414,8 +414,7 @@ def getTimeStamp():
     '''
     return round(time.time() * 1000)
 
-
-def formatStr2Timestamp(timeStr:str, format_style='%Y-%m-%d %H:%M:%S.%f'):
+def formatStr2Timestamp(timeStr: str, format_style='%Y-%m-%d %H:%M:%S.%f'):
     """
     timeStr:"2022-01-01 08:08:08.999"
     """
@@ -427,27 +426,33 @@ def formatStr2Timestamp(timeStr:str, format_style='%Y-%m-%d %H:%M:%S.%f'):
     return ret_stamp
 
 
-def timeStampStr2FormatTime(timestamp:int, format_style='%Y-%m-%d %H:%M:%S.%f'):
+def timeStampStr2FormatTime(timestamp: int, format_style='%Y-%m-%d %H:%M:%S.%f'):
     """"
     timestampStr:1648741273998
     """
     # return time.strftime(format_type,time.localtime(timestampStr))
-    
-    timestamp = float(timestamp)/1000
+
+    timestamp = float(timestamp) / 1000
     ret_datetime = datetime.utcfromtimestamp(timestamp).strftime(format_style)
     return ret_datetime
 
-def timestampsCompare(bigOne:int,smarllOne:int):
+
+def timestampsCompare(bigOne: int, smarllOne: int):
     """
-    bigOne:1648741274000
-    smarllOne:1648741273998
+    bigOne:1648792986000
+    smarllOne:1648792990000
     """
-    big=datetime.utcfromtimestamp(float(bigOne)/1000).strftime('%Y-%m-%d %H:%M:%S.%f')
-    bigt=datetime.strptime(big, '%Y-%m-%d %H:%M:%S.%f')
-    small=datetime.utcfromtimestamp(float(smarllOne)/1000).strftime('%Y-%m-%d %H:%M:%S.%f')
-    smallt=datetime.strptime(small, '%Y-%m-%d %H:%M:%S.%f')
-    dalta=bigt-smallt
-    return dalta.seconds
+    big = datetime.utcfromtimestamp(float(bigOne) / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
+    bigt = datetime.strptime(big, '%Y-%m-%d %H:%M:%S.%f')
+    # print(bigt)
+    small = datetime.utcfromtimestamp(float(smarllOne) / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
+    smallt = datetime.strptime(small, '%Y-%m-%d %H:%M:%S.%f')
+    # print(smallt)
+    dalta = bigt - smallt
+    # return dalta.milliseconds
+    return dalta.total_seconds()
+
+
 
 
 

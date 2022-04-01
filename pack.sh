@@ -1,4 +1,4 @@
 pip uninstall -y khandytool
 rm -rf ./dist/*
 python setup.py sdist bdist_wheel
-pip install ./dist/khandytool-0.2.51-py3-none-any.whl
+pip install ./dist/khandytool-0.2.52-py3-none-any.whl

@@ -12,6 +12,7 @@ import re
 import websockets
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from collections import deque
 
 logger.add('run_log.txt',encoding='utf-8')
 
@@ -344,10 +345,39 @@ class kafkaOper(object):
         return topic_partition,b_offset, e_offset
 
     @staticmethod
-    def __str_to_timestamp(str_time, format_type='%Y-%m-%d %H:%M:%S'):
-        time_array = time.strptime(str_time, format_type)
-        return int(time.mktime(time_array)) * 1000
+    def __str_to_timestamp(timeStr, format_style='%Y-%m-%d %H:%M:%S'):
+        # time_array = time.strptime(str_time, format_type)
+        # return int(time.mktime(time_array)) * 1000
+        datetime_obj = datetime.strptime(timeStr, format_style)
+        ret_stamp = int(time.mktime(datetime_obj.timetuple()) * 1000.0 + datetime_obj.microsecond / 1000.0)
+        return ret_stamp
 
+    def kafkaMsgCompareBettwenTimeByKey(self,startTime:str,endTime:str):
+        '''
+        :param kafkaComsumer:
+        :param startTime: '2022-03-31 19:27:05.000'
+        :param endTime:'2022-03-31 19:28:33.999'
+        :return:res: dict string
+        '''
+        from collections import deque
+        res={}
+        # k_in = kafkaOper(topic='tacos-kernel-driver-topic', bootstrapserver=host).getConsumer()
+        par, start, end = self.kafkaConnection.get_offset_time_window(begin_time=startTime, end_time=endTime)
+        self.kafkaConnection.kafkaConnection.seek(par, start)
+
+        for msg in self.kafkaConnection.kafkaConnection:
+            id=json.loads(msg.value.decode().replace("\n","").replace("\t",""))['id']
+            q = deque()
+            if msg.offset >= end:
+                break
+            else:
+                if id not in res.keys():
+                    q.append(msg.timestamp)
+                    res[id]=q
+                else:
+                    q.append(msg.timestamp)
+                    res[id].extend(q)
+        return res
 
 
 def general_orderMsg(topic,serverAndPort,interval_ms,getNum,callbackFlag=False,callbackFuc=None):
