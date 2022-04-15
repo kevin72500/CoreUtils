@@ -27,4 +27,8 @@ using some opensource packge to complish this
 - mqtt operations to send to receive data from server
 - fake data generation base on faker
   
-### 6. next step plan to add har2locust or other protocol sender... or add some validate way in the automation testing.... or add some wrapped function about some framework, like pytest or behave
+### 6. next step plan to add har2locust or other protocol sender... 
+### or add some general validate function in the automation testing,like datatype validate,response validate,callback function ...
+### or add some wrapped function about auto test framework, like pytest or behave 
+### or deploy jmeter agent to distribute server or docker warapped agent
+### or retry function in the auto test framework
