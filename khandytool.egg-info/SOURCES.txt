@@ -1,3 +1,4 @@
+MANIFEST.in
 README.md
 setup.cfg
 setup.py
@@ -11,6 +12,7 @@ core/utils.py
 core/xmind2excel.py
 core/bladeTest/__init__.py
 core/bladeTest/app.py
+core/bladeTest/app_layout.py
 core/bladeTest/interactive.py
 core/bladeTest/main.py
 core/bladeTest/versionSuggestion.py
@@ -21,6 +23,7 @@ core/jmeterTool/har2jmeter.py
 core/jmeterTool/swagger2jmeter.py
 core/jmeterTool/har2jmeter_utils/__init__.py
 core/jmeterTool/har2jmeter_utils/templates/jmeter.jinja
+core/jmeterTool/jmeterzip/__init__.py
 khandytool.egg-info/PKG-INFO
 khandytool.egg-info/SOURCES.txt
 khandytool.egg-info/dependency_links.txt

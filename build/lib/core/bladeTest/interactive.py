@@ -1,22 +1,24 @@
 import random,time
 import os,sys
+import platform as pf
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 from time import sleep
+import shutil
 # print("###"+os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 # print("###"+os.path.abspath(os.path.dirname(os.getcwd())))
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 # sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
-from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox,radio
-from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row
+from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox,radio,actions
+from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row,put_processbar,set_processbar,put_error,put_warning,toast
 from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.jmeterTool.swagger2jmeter import swagger2jmeter
 from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
-from core.utils import CFacker,getDateTime
+from core.utils import CFacker,getDateTime,parseJmeterXml
 from core.mqttUtil import NormalMqttGetter
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
@@ -50,6 +52,73 @@ def myapp():
             mqttListener()
     except Exception as e:
         put_text(e)
+
+
+def jmeterRun():
+    '''this is using jmeter.bat or jmeter.sh to run the script you have generated and share with other'''
+    session.set_env(title='testToolKit')
+    
+    script_f = file_upload("上传jmx脚本文件",accept="*.jmx",placeholder='选择jmx文件')
+    open(os.path.expanduser('~')+os.sep+script_f['filename'], 'wb').write(script_f['content'])
+
+    flag = actions('确认', ['是', '否'],
+                        help_text='是否需要参数文件?')
+    if flag=="是":
+        while confirm=="否":
+            data_f = file_upload("上传脚本文件所需的数据文件",accept="*.csv",placeholder='选择csv文件')
+            open(os.path.expanduser('~')+os.sep+data_f['filename'], 'wb').write(data_f['content'])
+            # 简单的操作
+            confirm = actions('确认', ['是', '否'],
+                            help_text='确认文件是否上传完毕?')
+
+    filename='apache-jmeter-5.4.1.zip'
+    plat=pf.platform().split('-')[0]
+    # location=os.path.join(sys.exec_prefix, 'jmeterTool')+os.sep+"jmeterzip"+os.sep
+    location=os.path.abspath(os.getcwd())+os.sep
+    # print(plat)
+    # print(location)
+
+
+    if "wind" in plat.lower():
+        import time
+        put_processbar(name='bar',init=0.15,auto_close=True)
+        shutil.unpack_archive(location+filename, os.path.expanduser('~'))
+        for i in range(2, 11):
+            set_processbar('bar', i / 10)
+            time.sleep(0.1)
+    else:
+        import time
+        put_processbar(name='bar',init=0.15,auto_close=True)
+        shutil.unpack_archive(location+filename, os.path.expanduser('~'))
+        for i in range(2, 11):
+            set_processbar('bar', i / 10)
+            time.sleep(0.1)
+
+    jmxFilePath=os.path.expanduser('~')+os.sep+script_f['filename']
+    # print(f'path{jmxFilePath}')
+    jmxParamList=parseJmeterXml(jmxFilePath)
+
+    # print(type(jmxParamList))
+    # print(jmxParamList)
+
+
+    if jmxParamList==False:
+        toast('jmx脚本没有参数,即将直接运行', position='center', color='#2188ff', duration=0)
+        runComd="jmeter -n -t "+jmxFilePath+" "+"-l out.jtl"
+        print(runComd)
+    else:
+        paraList=[]
+        for one in jmxParamList:
+            paraList.append(input(label=one[0]+":"+one[2], name=one[0],value=one[1]))
+        info = input_group("脚本参数",paraList)
+
+    paramStr=""
+    for k, v in info.items():
+        paramStr=paramStr+("-P"+k+" "+v+" ")
+    print(paramStr)
+
+    runComd="jmeter -n -t "+jmxFilePath+" "+paramStr+"-l out.jtl"
+    print(runComd)
 
 def jmeterScriptGen():
     '''
@@ -727,7 +796,8 @@ def mqttListener():
 
 
 if __name__ == '__main__':
-    start_server(myapp, port=8899)
+    # start_server(myapp, port=8899)
+    jmeterRun()
     # mqttListener()
     # print(session.info["server_host"].split(":")[0])
     # kafkaListener()

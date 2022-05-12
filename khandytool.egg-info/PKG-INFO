@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: khandytool
-Version: 0.2.52
+Version: 0.2.53
 Summary: khandytool, handy core in testing
 Home-page: https://github.com/kevin72500/khandytool
 Author: Ou Peng
@@ -35,7 +35,11 @@ Description: # Khandytool
         - mqtt operations to send to receive data from server
         - fake data generation base on faker
           
-        ### 6. next step plan to add har2locust or other protocol sender... or add some validate way in the automation testing.... or add some wrapped function about some framework, like pytest or behave
+        ### 6. next step plan to add har2locust or other protocol sender... 
+        ### or add some general validate function in the automation testing,like datatype validate,response validate,callback function ...
+        ### or add some wrapped function about auto test framework, like pytest or behave 
+        ### or deploy jmeter agent to distribute server or docker warapped agent
+        ### or retry function in the auto test framework
         
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3

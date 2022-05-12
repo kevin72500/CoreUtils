@@ -10,6 +10,9 @@ from functools import wraps
 import os
 import json
 import re
+from xml.dom.minidom import parse
+import xmltodict
+from jsonpath import jsonpath
 
 def findBy(oriStr,flag="",pattern=""):
     if flag=="json":
@@ -462,7 +465,7 @@ def getDateTime(format="%Y-%m-%d %H:%M:%S.%f"):
     :param format: time format
     :return: format time
     '''
-    return datetime.datetime.strftime(datetime.datetime.now(), format)
+    return datetime.strftime(datetime.datetime.now(), format)
 
 def jsonfile_to_obj(json_file_path):
     # import json
@@ -569,12 +572,46 @@ def makeCase(xmindPath,excelName):
 #         return "switch to jmeter script error"
 
 
+def parseJmeterXml(filePath='jmeterParserTest.jmx'):
+    try:
+        with open(filePath,mode='r',encoding='utf8') as xf:
+            doc=xmltodict.parse(xf.read())
+            # print(doc['jmeterTestPlan']['hashTree']['hashTree']['Arguments']['collectionProp']['elementProp']['stringProp'])
+            json_result=json.loads(json.dumps(doc,ensure_ascii=False))
+            # print(json_result)
+            args=jsonpath(json_result, '$..Arguments.collectionProp.elementProp[*].stringProp')
+            # print(arg_prop)
+            resList=[]
+            for arg in args:
+                    tempList=[]
+                    for one in arg:
+                        if one['@name']=='Argument.name':
+                            tempList.append(one['#text'])
+                        elif one['@name']=='Argument.value':
+                            if "${__P" in one['#text']:
+                                tempList.append(one['#text'].strip('${__P(').strip(')}').split(',')[1])
+                        elif one['@name']=='Argument.desc':
+                            tempList.append(one['#text'])
+                    if len(tempList)>2:
+                        resList.append(tempList)
+            # print(resList)
+            if len(resList)>0:
+                return resList
+            else:
+                return False
+    except Exception as e:
+        print(e)
+        return False
+
+        
+    # return paramList
 
 
 
 if __name__=='__main__':
     # print(CFacker().get_it("month"))
     # print(swagger2jmeter("http://192.168.118.168:12812/space/v2/api-docs"))
-    print(formatStr2Timestamp("2022-04-01 08:08:08.345"))
-    print(timeStampStr2FormatTime(1648741273123))
-    timestampsCompare(1648741273123, 1648741259023)
+    # print(formatStr2Timestamp("2022-04-01 08:08:08.345"))
+    # print(timeStampStr2FormatTime(1648741273123))
+    # timestampsCompare(1648741273123, 1648741259023)
+    parseJmeterXml()
