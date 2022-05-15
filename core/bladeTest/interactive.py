@@ -12,7 +12,7 @@ import shutil
 # sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox,radio,actions
-from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row,put_processbar,set_processbar,put_error,put_warning,toast
+from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row,put_processbar,set_processbar,put_error,put_warning,toast,put_grid,put_button,put_table,use_scope,span,clear
 from pywebio import start_server,session,platform
 from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.jmeterTool.swagger2jmeter import swagger2jmeter
@@ -25,39 +25,59 @@ from functools import partial
 from multiprocessing import Process
 import decimal,websockets,asyncio
 import json
+from functools import partial
 
-
-def myapp():
-    '''
-    this main function for enter the whole functions of pywebio
-    :return:
-    '''
-    session.set_env(title='testToolKit')
-
-    select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","jmeter脚本生成","假数据构造","kafka操作","mqtt操作"])
+@use_scope('main',clear=True)
+def myapp2():
     try:
-        if select_type=="xmind转excel":
-            uploadXmind()
-        elif select_type=="混沌测试-交互式":
-            oneCheck()
-        elif select_type=="混沌测试-直接输入(推荐)":
-            onePageInput()
-        elif select_type=="jmeter脚本生成":
-            jmeterScriptGen()
-        elif select_type=="假数据构造":
-            myFackData()
-        elif select_type=="kafka操作":
-            kafkaListener()
-        elif select_type=="mqtt操作":
-            mqttListener()
+        session.set_env(title='testToolKit')
+        #clear('content')
+
+        put_table([
+            ['xmind转excel',span('混沌测试(主机、docker)',col=2),'jmeter操作','kafka操作','mqtt操作','测试数据生成'],
+            [put_button("xmind转excel", onclick=lambda: uploadXmind(),scope='content'),
+            put_button("混沌测试-交互式", onclick=lambda: oneCheck(),scope='content'),
+            put_button("混沌测试-直接输入(推荐)", onclick=lambda: onePageInput(),scope='content'),
+            put_button("jmeter操作", onclick=lambda: jmeterScriptGen(),scope='content'),
+            put_button("kafka操作", onclick=lambda: kafkaListener(),scope='content'),
+            put_button("mqtt操作", onclick=lambda: mqttListener(),scope='content'),
+            put_button("测试数据生成",onclick=lambda: myFackData(),scope='content')]
+        ])
+
     except Exception as e:
-        put_text(e)
+        toast(e)
 
+# def myapp():
+#     '''
+#     this main function for enter the whole functions of pywebio
+#     :return:
+#     '''
+#     session.set_env(title='testToolKit')
 
+#     select_type = select("选择你要做的操作:",["xmind转excel","混沌测试-交互式","混沌测试-直接输入(推荐)","jmeter脚本生成","假数据构造","kafka操作","mqtt操作"])
+#     try:
+#         if select_type=="xmind转excel":
+#             uploadXmind()
+#         elif select_type=="混沌测试-交互式":
+#             oneCheck()
+#         elif select_type=="混沌测试-直接输入(推荐)":
+#             onePageInput()
+#         elif select_type=="jmeter脚本生成":
+#             jmeterScriptGen()
+#         elif select_type=="假数据构造":
+#             myFackData()
+#         elif select_type=="kafka操作":
+#             kafkaListener()
+#         elif select_type=="mqtt操作":
+#             mqttListener()
+#     except Exception as e:
+#         put_text(e)
+
+@use_scope('content',clear=True)
 def jmeterRun():
     '''this is using jmeter.bat or jmeter.sh to run the script you have generated and share with other'''
     session.set_env(title='testToolKit')
-    
+    #clear('content')
     script_f = file_upload("上传jmx脚本文件",accept="*.jmx",placeholder='选择jmx文件')
     open(os.path.expanduser('~')+os.sep+script_f['filename'], 'wb').write(script_f['content'])
 
@@ -120,26 +140,28 @@ def jmeterRun():
     runComd="jmeter -n -t "+jmxFilePath+" "+paramStr+"-l out.jtl"
     print(runComd)
 
+@use_scope('content',clear=True)
 def jmeterScriptGen():
     '''
     this just invoke the lib for generate jmeter script
     :return:
     '''
     session.set_env(title='testToolKit')
+    #clear('content')
     select_type = select("选择你要做的操作:",["swagger转jmeter脚本","har转jmeter脚本"])
     if select_type=="swagger转jmeter脚本":
         url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
         # print(url)
         location=os.path.join(sys.exec_prefix, 'jmx')+os.sep
-        print(location)
+        # print(location)
         swagger2jmeter(url,location)
         file_location=None
         # location=os.path.abspath(os.path.dirname(__file__))+os.sep+'jmx'+os.sep
-        print(location)
+        # print(location)
         for x,y,z in os.walk(location):
             file_location=location+"".join(z)
             break
-        print(file_location)
+        # print(file_location)
         put_file(content=open(file_location,mode="rb").read(),name=file_location.split(os.sep)[-1],label="点击下载jmeter脚本")
         os.remove(file_location)
     elif select_type=="har转jmeter脚本":
@@ -147,19 +169,21 @@ def jmeterScriptGen():
         open('temp.har', 'wb').write(f['content'])
         har2jmeter('temp.har')
         location=os.path.abspath('.')+os.path.sep+"autoGen.jmx"
-        print(location)
+        # print(location)
         put_file(content=open(location,mode="rb").read(),name="autoGen.jmx",label="点击下载jmeter脚本")
         
 
-
+@use_scope('content',clear=True)
 def uploadXmind():
     '''
     generate excel of test case from a xmind file
     :return:
     '''
+    #clear('content')
     session.set_env(title='testToolKit')
+    
     # Upload a file and save to server      
-    print(os.path.abspath(os.path.dirname(__file__)))
+    # print(os.path.abspath(os.path.dirname(__file__)))
     curPath = os.path.abspath(os.path.dirname(__file__))
     rootPath = os.path.split(curPath)[0]
 
@@ -175,13 +199,14 @@ def uploadXmind():
 
 
 
-
+@use_scope('content',clear=True)
 def onePageInput():
     '''
     using formated json script to generate the blade test and run it
     :return:
     '''
     session.set_env(title='testToolKit')
+    #clear('content')
     put_markdown('''# 基础指令参考：
         ## blade create cpu load [flags]
                             --timeout string   设定运行时长，单位是秒，通用参数
@@ -301,13 +326,14 @@ def onePageInput():
 
 
 
-
+@use_scope('content',clear=True)
 def oneCheck():
     '''
     using step by step way to execute blade test
     :return:
     '''
     session.set_env(title='testToolKit')
+    #clear('content')
     input_data={"data":[]}
     temp_data={}
     
@@ -516,13 +542,14 @@ class DecimalEncoder(json.JSONEncoder):
             return float(o)
         super(DecimalEncoder, self).default(o)
 
-
+@use_scope('content',clear=True)
 def myFackData():
     '''
     generate the fake data by using this app, when you test
     :return:
     '''
     session.set_env(title='testToolKit')
+    #clear('content')
     all_options={
     "city_suffix":"市，县",
     "country":"国家",
@@ -670,13 +697,14 @@ def myFackData():
     # put_text(restDict)
     put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
 
+@use_scope('content',clear=True)
 def kafkaListener():
     '''
     to send kafka message or listener the kafka topic
     :return:
     '''
     session.set_env(title='testTools')
-
+    #clear('content')
     select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息"])
 
     if select_type=="kafka发送消息":
@@ -765,18 +793,28 @@ def kafkaListener():
                     put_text(f"{getDateTime()} : {data['topic']} --> {a}")
                 # print(a)
 
+from functools import partial
+def filterPrint(oriStr,tarStr):
+    if tarStr in oriStr:
+        put_text(oriStr)
+
+@use_scope('content',clear=True)
 def mqttListener():
     session.set_env(title='testTools')
+    #clear('content')
 
     select_type = select("选择监听的mqtt服务:",["自定义服务","本地固定服务(待定)"])
     if select_type=="自定义服务":
         data = input_group("mqtt信息",[
             input("mqtt主机，必填", name="host"),
-            input("mqtt端口，必填", name="port"),
+            input("mqtt端口，必填（整数）", name="port"),
             input("mqtt topic，必填",name="topic"),
             input("mqtt用户", name="user"),
             input("mqtt密码", name="passwd"),
+            input("消息包含", name="filter"),
             ])
+        if data['filter']=="" or data['filter']==None:
+            NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=filterPrint(oriStr, data['filter']))
         NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=put_text)
     elif select_type == "本地固定服务(待定)":
         put_text('未暴露')
@@ -796,8 +834,9 @@ def mqttListener():
 
 
 if __name__ == '__main__':
-    # start_server(myapp, port=8899)
-    jmeterRun()
+    start_server(myapp2, port=8899)
+    # myapp2()
+    # jmeterRun()
     # mqttListener()
     # print(session.info["server_host"].split(":")[0])
     # kafkaListener()

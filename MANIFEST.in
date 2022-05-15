@@ -1,1 +1,1 @@
-include jmx/*.zip
+include core/jmeterTool/jmeterzip/*.zip
