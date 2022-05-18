@@ -91,7 +91,7 @@ def jmeterRun():
     else:
         shutil.rmtree(reportDir)
         os.mkdir(reportDir)
-        tmp = os.popen('chmod -R 777 '+reportDir+os.sep).readlines()
+        tmp = os.popen('chmod -R 755 '+reportDir+os.sep).readlines()
 
     script_f = file_upload("上传jmx脚本文件",accept="*.jmx",placeholder='选择jmx文件')
     open(userPath+os.sep+script_f['filename'], 'wb').write(script_f['content'])
@@ -110,6 +110,7 @@ def jmeterRun():
     plat=pf.platform().split('-')[0]
     # location1=os.path.join(sys.exec_prefix, 'jmeterTool')+os.sep+"jmeterzip"+os.sep
     libpath=sys.path
+    print(f'libpath: {libpath}')
     for one in libpath:
         if "site-packages" in one:
             location1Prefx=one
@@ -118,7 +119,7 @@ def jmeterRun():
     location=os.path.abspath(os.getcwd())+os.sep
     # print(plat)
     # print(location)
-    # print(location1)
+    print(location1)
 
     if "wind" in plat.lower():
         import time
@@ -162,9 +163,9 @@ def jmeterRun():
         paraList=[]
         for one in jmxParamList:
             if len(one)==3:
-                paraList.append(input(label=one[0]+": "+one[2], name=one[0],value=one[1]))
+                paraList.append(input(label=one[0]+": "+one[2], name=one[0]+CFacker().get_it("random_letter"),value=one[1]))
             elif len(one)<=2:
-                paraList.append(input(label=one[0]+": "+"No Desc", name=one[0],value=one[1]))
+                paraList.append(input(label=one[0]+": "+"No Desc", name=one[0]+CFacker().get_it("random_letter"),value=one[1]))
 
         info = input_group(script_f['filename']+": 脚本参数",paraList)
 
@@ -186,7 +187,8 @@ def jmeterRun():
             time.sleep(0.1)
         put_text("\n".join(tmp))
 
-    shutil.make_archive("report", "zip",reportDir)
+    # shutil.make_archive("report", "zip",reportDir)
+    
     put_link('查看报告',url='/static/index.html',new_window=True)
 
 @use_scope('content',clear=True)
@@ -381,8 +383,6 @@ def onePageInput():
         remove('content')
 
 
-    
-    
 
 
 
