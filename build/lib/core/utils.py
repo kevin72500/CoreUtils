@@ -591,6 +591,8 @@ def parseJmeterXml(filePath='/Users/oupeng/ssoHttp.jmx'):
                     elif one['@name']=='Argument.value':
                         if "${__P" in one['#text']:
                             tempList.append(one['#text'].strip('${__P(').strip(')}').split(',')[1])
+                        else:
+                            tempList.append(one['#text'])
                     elif one['@name']=='Argument.desc':
                         tempList.append(one['#text'])
                 if len(tempList)>=2:

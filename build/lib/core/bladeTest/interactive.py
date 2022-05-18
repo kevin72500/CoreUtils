@@ -80,12 +80,18 @@ def jmeterRun():
     session.set_env(title='testToolKit')
     #clear('content')
     userPath=os.path.expanduser('~')
+    resultFile=userPath+os.sep+"out.jtl"
+    if os.path.exists(resultFile):
+        os.remove(resultFile)
+
     reportDir=userPath+os.sep+"report"
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
+        tmp = os.popen('chmod -R 755 '+reportDir+os.sep).readlines()
     else:
         shutil.rmtree(reportDir)
         os.mkdir(reportDir)
+        tmp = os.popen('chmod -R 777 '+reportDir+os.sep).readlines()
 
     script_f = file_upload("上传jmx脚本文件",accept="*.jmx",placeholder='选择jmx文件')
     open(userPath+os.sep+script_f['filename'], 'wb').write(script_f['content'])
@@ -116,19 +122,19 @@ def jmeterRun():
 
     if "wind" in plat.lower():
         import time
-        put_processbar(label='文件拷贝中',name='bar',init=0.15,auto_close=True)
+        put_processbar(label='准备中',name='bar',init=0.15,auto_close=True)
         shutil.unpack_archive(location1+filename, userPath)
         for i in range(2, 11):
             set_processbar('bar', i / 10)
             time.sleep(0.1)
     else:
         import time
-        put_processbar(label='文件拷贝中',name='bar',init=0.15,auto_close=True)
+        put_processbar(label='准备中',name='bar',init=0.15,auto_close=True)
         shutil.unpack_archive(location1+filename, userPath)
         for i in range(2, 11):
             set_processbar('bar', i / 10)
             time.sleep(0.1)
-        tmp = os.popen('chmod -R 755 '+userPath+os.sep+"apache-jmeter-5.4.1"+os.sep).readlines()
+        tmp = os.popen('chmod -R 777 '+userPath+os.sep+"apache-jmeter-5.4.1"+os.sep).readlines()
 
     jmxFilePath=userPath+os.sep+script_f['filename']
     # print(f'path: {jmxFilePath}')
@@ -140,12 +146,14 @@ def jmeterRun():
 
     if jmxParamList==False or jmxParamList==None:
         toast('jmx脚本没有参数,即将直接运行', position='center', color='#2188ff', duration=0)
-        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+"-l out.jtl -e -o "+reportDir
+        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+"-l out.jtl"
+        reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
         print(runComd)
         # tmp = os.popen(runComd).readlines()
         
         put_processbar(label='运行中',name='bar',init=0.15,auto_close=True)
         tmp = os.popen(runComd).readlines()
+        os.popen(reportComd)
         for i in range(2, 11):
             set_processbar('bar', i / 10)
             time.sleep(0.1)
@@ -165,19 +173,21 @@ def jmeterRun():
             paramStr=paramStr+("-J"+k+" "+v+" ")
         # print(paramStr)
 
-        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+paramStr+"-l out.jtl -e -o "+reportDir
+        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+paramStr+"-l out.jtl"
         print(runComd)
+        reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
     
 
         put_processbar(label='运行中',name='bar',init=0.15,auto_close=True)
         tmp = os.popen(runComd).readlines()
+        os.popen(reportComd)
         for i in range(2, 11):
             set_processbar('bar', i / 10)
             time.sleep(0.1)
         put_text("\n".join(tmp))
 
-
-    put_link('查看报告',url=reportDir+os.sep+'index.html',scope='content')
+    shutil.make_archive("report", "zip",reportDir)
+    put_link('查看报告',url='/static/index.html',new_window=True)
 
 @use_scope('content',clear=True)
 def jmeterScriptGen():
@@ -591,7 +601,13 @@ def run(portNum=8899):
     :param portNum:
     :return:
     '''
-    start_server(myapp, port=portNum)
+    userPath=os.path.expanduser('~')
+    reportDir=userPath+os.sep+"report"
+    if not os.path.exists(reportDir):
+        os.mkdir(reportDir)
+    # shutil.rmtree(reportDir)
+    start_server(myapp2, port=portNum,static_dir=reportDir)
+    # start_server(myapp, port=portNum)
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -907,7 +923,12 @@ def mqttListener():
 
 
 if __name__ == '__main__':
-    start_server(myapp2, port=8899)
+    userPath=os.path.expanduser('~')
+    reportDir=userPath+os.sep+"report"
+    if not os.path.exists(reportDir):
+        os.mkdir(reportDir)
+    # shutil.rmtree(reportDir)
+    start_server(myapp2, port=8899,static_dir=reportDir)
     # myapp2()
     # jmeterRun()
     # mqttListener()
