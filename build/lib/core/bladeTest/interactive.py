@@ -19,7 +19,7 @@ from core.jmeterTool.swagger2jmeter import swagger2jmeter
 from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
 from core.utils import CFacker,getDateTime,parseJmeterXml
-from core.mqttUtil import NormalMqttGetter
+from core.mqttUtil import NormalMqttGetter,NormalMqttSender
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
 from multiprocessing import Process
@@ -34,15 +34,15 @@ def myapp2():
         #clear('content')
 
         put_table([
-            ['xmind转excel',span('混沌测试(主机、docker)',col=2),'jmeter操作','kafka操作','mqtt操作','测试数据生成','运行脚本'],
+            ['xmind转excel',span('混沌测试(主机、docker)',col=2),'jmeter操作','kafka操作','mqtt操作','数据生成'],
             [put_button("xmind转excel", onclick=lambda: uploadXmind(),scope='content'),
             put_button("混沌测试-交互式", onclick=lambda: oneCheck(),scope='content'),
-            put_button("混沌测试-直接输入(推荐)", onclick=lambda: onePageInput(),scope='content'),
+            put_button("混沌测试-直输式", onclick=lambda: onePageInput(),scope='content'),
             put_button("jmeter操作", onclick=lambda: jmeterScriptGen(),scope='content'),
             put_button("kafka操作", onclick=lambda: kafkaListener(),scope='content'),
             put_button("mqtt操作", onclick=lambda: mqttListener(),scope='content'),
-            put_button("测试数据生成",onclick=lambda: myFackData(),scope='content'),
-            put_button("运行jmeter脚本",onclick=lambda: jmeterRun(),scope='content')]
+            put_button("测试数据生成",onclick=lambda: myFackData(),scope='content')]
+            # put_button("运行jmeter脚本",onclick=lambda: jmeterRun(),scope='content')]
         ])
 
     except Exception as e:
@@ -73,6 +73,22 @@ def myapp2():
 #             mqttListener()
 #     except Exception as e:
 #         put_text(e)
+
+@use_scope('content',clear=True)
+def jmeterDownload():
+    session.set_env(title='testToolKit')
+    userPath=os.path.expanduser('~')
+    filename='apache-jmeter-5.4.1.zip'
+    libpath=sys.path
+    print(f'libpath: {libpath}')
+    for one in libpath:
+        if "site-packages" in one:
+            location1Prefx=one
+            # print(location1Prefx)
+    location1=location1Prefx+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
+
+    put_file(content=open(location1+filename,mode="rb").read(),name=filename,label="点击下载软件")
+
 
 @use_scope('content',clear=True)
 def jmeterRun():
@@ -199,8 +215,10 @@ def jmeterScriptGen():
     '''
     session.set_env(title='testToolKit')
     #clear('content')
-    select_type = select("选择你要做的操作:",["swagger转jmeter脚本","har转jmeter脚本"])
-    if select_type=="swagger转jmeter脚本":
+    select_type = select("选择你要做的操作:",["下载jmeter","swagger转jmeter脚本","har转jmeter脚本","运行jmeter"])
+    if select_type=="下载jmeter":
+        jmeterDownload()
+    elif select_type=="swagger转jmeter脚本":
         url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
         # print(url)
         location=os.path.join(sys.exec_prefix, 'jmx')+os.sep
@@ -222,6 +240,8 @@ def jmeterScriptGen():
         location=os.path.abspath('.')+os.path.sep+"autoGen.jmx"
         # print(location)
         put_file(content=open(location,mode="rb").read(),name="autoGen.jmx",label="点击下载jmeter脚本")
+    elif select_type=="运行jmeter":
+        jmeterRun()
         
 
 @use_scope('content',clear=True)
@@ -606,7 +626,7 @@ def run(portNum=8899):
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=portNum,static_dir=reportDir)
+    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False)
     # start_server(myapp, port=portNum)
 
 
@@ -888,8 +908,8 @@ def mqttListener():
         session.set_env(title='testTools')
         #clear('content')
 
-        select_type = select("选择监听的mqtt服务:",["自定义服务","本地固定服务(待定)"])
-        if select_type=="自定义服务":
+        select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)"])
+        if select_type=="自定义接收服务":
             data = input_group("mqtt信息",[
                 input("mqtt主机，必填", name="host"),
                 input("mqtt端口，必填（整数）", name="port"),
@@ -901,6 +921,26 @@ def mqttListener():
             if data['filter']=="" or data['filter']==None:
                 NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=filterPrint(oriStr, data['filter']))
             NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=put_text)
+        elif select_type=="自定义发送服务":
+            data = input_group("mqtt信息",[
+                input("mqtt主机，必填", name="host"),
+                input("mqtt端口，必填（整数）", name="port"),
+                input("mqtt topic，必填",name="topic"),
+                input("mqtt用户", name="user"),
+                input("mqtt密码", name="passwd"),
+                input("mqtt消息", name="msg"),
+                radio(label="持续发送",name="always",inline='true',options=('是','否'),value=('否'))
+                ])
+            if data['always']=="否":
+                NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(data['msg'])
+                put_text('发送完成')
+            elif data['always']=="是":
+                counter=0
+                while True:
+                    counter=counter+1
+                    NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(data['msg'])
+                    put_text(f"发送{counter}次, {getDateTime()}")
+                    sleep(int(data['interval']))
         elif select_type == "本地固定服务(待定)":
             put_text('未暴露')
         # NormalMqttGetter(host='127.0.0.1',port=1883,topic='fifa').getClient(func=put_text)
@@ -928,7 +968,7 @@ if __name__ == '__main__':
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=8899,static_dir=reportDir)
+    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False)
     # myapp2()
     # jmeterRun()
     # mqttListener()
