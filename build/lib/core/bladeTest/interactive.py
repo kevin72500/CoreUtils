@@ -38,7 +38,7 @@ def myapp2():
             [put_button("xmind转excel", onclick=lambda: uploadXmind(),scope='content'),
             put_button("混沌测试-交互式", onclick=lambda: oneCheck(),scope='content'),
             put_button("混沌测试-直输式", onclick=lambda: onePageInput(),scope='content'),
-            put_button("jmeter操作", onclick=lambda: jmeterScriptGen(),scope='content'),
+            put_button("jmeter自动化", onclick=lambda: jmeterScriptGen(),scope='content'),
             put_button("kafka操作", onclick=lambda: kafkaListener(),scope='content'),
             put_button("mqtt操作", onclick=lambda: mqttListener(),scope='content'),
             put_button("测试数据生成",onclick=lambda: myFackData(),scope='content')]
@@ -75,7 +75,28 @@ def myapp2():
 #         put_text(e)
 
 
-
+@use_scope('content',clear=True)
+def jmeterRule():
+    session.set_env(title='testToolKit')
+    put_markdown(r'''
+    # 使用须知：
+    ## 1.从本地址下载jmeter.zip包，已经下载并支持http,jdbc,kafka,mqtt等消息的发送插件，无需再次下载
+    ## 2.支持直接拷贝开发出获得的代码进行运行，如缺少maven依赖包，可以用groovy进行包依赖管理，本下载包已经加入了包管理
+    ```
+    引入包参考：
+    @Grapes([
+        @Grab(group='org.apache.kafka', module='kafka-clients', version='2.5.1'),
+        @Grab(group='org.apache.kafka', module='kafka_2.13', version='2.5.1'),
+        @Grab(group='com.fasterxml.jackson.core', module='jackson-core', version='2.12.3')
+        ])
+    ```
+    ## 3.如需要使用平台运行脚本，并需要运行时修改特定的参数项，可以按照如下格式修改：
+    ```
+    参数名称：authDbName  值：${__P(authDbName,auth_center)} 备注：xxx
+    ```
+    ## 4.如果需要查看结果，需要将请求的sampler命名格式 以名称+路径的方式存储，如：
+    登录/login/index
+    ''', lstrip=True).show()
 
 @use_scope('content',clear=True)
 def jmeterDownload():
@@ -216,10 +237,12 @@ def jmeterScriptGen():
     '''
     session.set_env(title='testToolKit')
     #clear('content')
-    select_type = select("选择你要做的操作:",["下载jmeter","swagger转jmeter脚本","har转jmeter脚本","运行jmeter"])
-    if select_type=="下载jmeter":
+    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台"])
+    if select_type=="自动化规范":
+        jmeterRule()
+    elif select_type=="标准包下载":
         jmeterDownload()
-    elif select_type=="swagger转jmeter脚本":
+    elif select_type=="swagger转脚本":
         url=input('输入swagger地址：example:http://192.168.xxx.xxx:port/space_name/v2/api-docs')
         # print(url)
         location=os.path.join(sys.exec_prefix, 'jmx')+os.sep
@@ -234,14 +257,14 @@ def jmeterScriptGen():
         # print(file_location)
         put_file(content=open(file_location,mode="rb").read(),name=file_location.split(os.sep)[-1],label="点击下载jmeter脚本")
         os.remove(file_location)
-    elif select_type=="har转jmeter脚本":
+    elif select_type=="har转脚本":
         f = file_upload("上传har文件，可以从fidder, charlse, chrome开发者工具中导出",accept="*.har",placeholder='选择har文件')
         open('temp.har', 'wb').write(f['content'])
         har2jmeter('temp.har')
         location=os.path.abspath('.')+os.path.sep+"autoGen.jmx"
         # print(location)
         put_file(content=open(location,mode="rb").read(),name="autoGen.jmx",label="点击下载jmeter脚本")
-    elif select_type=="运行jmeter":
+    elif select_type=="自测工作台":
         jmeterRun()
         
 
@@ -288,7 +311,7 @@ def onePageInput():
     try:
         session.set_env(title='testToolKit')
         #clear('content')
-        put_markdown('''# 基础指令参考：
+        put_markdown(r'''# 基础指令参考：
             ## blade create cpu load [flags]
                                 --timeout string   设定运行时长，单位是秒，通用参数
                                 --cpu-count string     指定 CPU 满载的个数
@@ -368,7 +391,7 @@ def onePageInput():
                                 --container-id string      要删除的容器 ID
                                 --docker-endpoint string   Docker server 地址，默认为本地的 /var/run/docker.sock
                                 --force                    是否强制删除
-            ''')
+            ''', lstrip=True).show()
         json_str = textarea('请输入json串', rows=30,value=r'''{
         "data":[
         {
