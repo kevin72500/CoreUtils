@@ -34,7 +34,7 @@ def myapp2():
         #clear('content')
 
         put_table([
-            ['xmind转excel',span('混沌测试(主机、docker)',col=2),'jmeter操作','kafka操作','mqtt操作','数据生成'],
+            ['功能提速',span('高可用(主机、docker)',col=2),'自动化相关',span('数据链路检查',col=2),'测试辅助'],
             [put_button("xmind转excel", onclick=lambda: uploadXmind(),scope='content'),
             put_button("混沌测试-交互式", onclick=lambda: oneCheck(),scope='content'),
             put_button("混沌测试-直输式", onclick=lambda: onePageInput(),scope='content'),
@@ -74,10 +74,13 @@ def myapp2():
 #     except Exception as e:
 #         put_text(e)
 
+
+
+
 @use_scope('content',clear=True)
 def jmeterDownload():
     session.set_env(title='testToolKit')
-    userPath=os.path.expanduser('~')
+    # userPath=os.path.expanduser('~')
     filename='apache-jmeter-5.4.1.zip'
     libpath=sys.path
     print(f'libpath: {libpath}')
@@ -86,9 +89,7 @@ def jmeterDownload():
             location1Prefx=one
             # print(location1Prefx)
     location1=location1Prefx+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
-
-    put_file(content=open(location1+filename,mode="rb").read(),name=filename,label="点击下载软件")
-
+    put_file(content=open(location1+filename,mode="rb").read(),name=filename,label="点击下载软件",)
 
 @use_scope('content',clear=True)
 def jmeterRun():
@@ -781,16 +782,30 @@ def myFackData():
         "lexify":"替换所有问号?带有随机字母的事件"
         }
         
+        num=input("生成几组数据，默认是1组", type=NUMBER, value=1)
+        print(f'num is {num}')
+        myformat=checkbox(label='选择生成数据格式：支持csv,json',options=['csv','json'])
+        print(f'format is {myformat}')
 
         choose=checkbox(label='从下列选项中，选择你想生成的数据：',options=all_options.values())
+        
         # put_row([input('自定义键值：'),checkbox(options=[''])])
-        restDict={}
-        for one in choose:
-            funcName=list(all_options.keys())[list(all_options.values()).index(one)]
-            restDict[one]=CFacker().get_it(funcName)
+        allDict={}
+        for i in range(0,num):
+            restDict={}
+            for one in choose:
+                funcName=list(all_options.keys())[list(all_options.values()).index(one)]
+                restDict[one]=CFacker().get_it(funcName)
+            allDict[i]=restDict
         
         # put_text(restDict)
-        put_code(json.dumps(restDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
+        if myformat[0]=='json':
+            put_code(json.dumps(allDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
+        elif myformat[0]=='csv':
+            outStr=""
+            for k,v in allDict.items():
+                outStr=outStr+",".join(v.values())+'\n'
+            put_text(outStr) 
     except Exception as e:
         toast(e)
         remove('content')
@@ -919,8 +934,8 @@ def mqttListener():
                 input("消息包含", name="filter"),
                 ])
             if data['filter']=="" or data['filter']==None:
-                NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=filterPrint(oriStr, data['filter']))
-            NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(func=put_text)
+                NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(partial(filterPrint, tarStr=data['filter']))
+            NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(put_text)
         elif select_type=="自定义发送服务":
             data = input_group("mqtt信息",[
                 input("mqtt主机，必填", name="host"),
@@ -932,13 +947,13 @@ def mqttListener():
                 radio(label="持续发送",name="always",inline='true',options=('是','否'),value=('否'))
                 ])
             if data['always']=="否":
-                NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(data['msg'])
+                NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(data['msg'])
                 put_text('发送完成')
             elif data['always']=="是":
                 counter=0
                 while True:
                     counter=counter+1
-                    NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic']).getClient(data['msg'])
+                    NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(data['msg'])
                     put_text(f"发送{counter}次, {getDateTime()}")
                     sleep(int(data['interval']))
         elif select_type == "本地固定服务(待定)":

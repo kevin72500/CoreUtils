@@ -595,7 +595,7 @@ def parseJmeterXml(filePath='/Users/oupeng/ssoHttp.jmx'):
                             tempList.append(one['#text'])
                     elif one['@name']=='Argument.desc':
                         tempList.append(one['#text'])
-                if len(tempList)>=2:
+                if len(tempList)>2:
                     # print(tempList)
                     resList.append(tempList)
             # print(resList)
