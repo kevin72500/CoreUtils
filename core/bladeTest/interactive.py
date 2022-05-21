@@ -806,9 +806,9 @@ def myFackData():
         }
         
         num=input("生成几组数据，默认是1组", type=NUMBER, value=1)
-        print(f'num is {num}')
-        myformat=checkbox(label='选择生成数据格式：支持csv,json',options=['csv','json'])
-        print(f'format is {myformat}')
+        # print(f'num is {num}')
+        myformat=radio(label='选择生成数据格式：支持csv,json',options=['csv','json'],value=['json'])
+        # print(f'format is {myformat}')
 
         choose=checkbox(label='从下列选项中，选择你想生成的数据：',options=all_options.values())
         
@@ -821,13 +821,20 @@ def myFackData():
                 restDict[one]=CFacker().get_it(funcName)
             allDict[i]=restDict
         
-        # put_text(restDict)
-        if myformat[0]=='json':
+        # put_text(allDict)
+        
+        if myformat=='json':
             put_code(json.dumps(allDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
-        elif myformat[0]=='csv':
+        elif myformat=='csv':
             outStr=""
             for k,v in allDict.items():
-                outStr=outStr+",".join(v.values())+'\n'
+                for vv in v.values():
+                    # print(f"vv {vv}")
+                    outStr=outStr+str(vv)+","
+                outStr=outStr+"\n"
+                # outStr=outStr+", ".join(v.values())+'\n'
+                # print(outStr)
+            # print(outStr)
             put_text(outStr) 
     except Exception as e:
         toast(e)
