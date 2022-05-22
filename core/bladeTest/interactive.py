@@ -41,7 +41,7 @@ def myapp2():
             put_button("jmeter自动化", onclick=lambda: jmeterScriptGen(),scope='content'),
             put_button("kafka操作", onclick=lambda: kafkaListener(),scope='content'),
             put_button("mqtt操作", onclick=lambda: mqttListener(),scope='content'),
-            put_button("测试数据生成",onclick=lambda: myFackData(),scope='content')]
+            put_button("测试数据",onclick=lambda: myFackData(),scope='content')]
             # put_button("运行jmeter脚本",onclick=lambda: jmeterRun(),scope='content')]
         ])
 
@@ -237,7 +237,7 @@ def jmeterScriptGen():
     '''
     session.set_env(title='testToolKit')
     #clear('content')
-    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台"])
+    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台","分布式部署(未开始）","docker打包部署(未开始)","标准包添加插件(未开始)"])
     if select_type=="自动化规范":
         jmeterRule()
     elif select_type=="标准包下载":
