@@ -133,7 +133,11 @@ def jmeterRun():
         tmp = os.popen('chmod -R 755 '+reportDir+os.sep).readlines()
 
     script_f = file_upload("上传jmx脚本文件",accept="*.jmx",placeholder='选择jmx文件')
-    open(userPath+os.sep+script_f['filename'], 'wb').write(script_f['content'])
+    scriptName=script_f['filename']
+
+    open(userPath+os.sep+scriptName, 'wb').write(script_f['content'])
+
+    
 
     flag = actions('确认', ['是', '否'],
                         help_text='是否需要参数文件?')
@@ -151,9 +155,14 @@ def jmeterRun():
     libpath=sys.path
     print(f'libpath: {libpath}')
     for one in libpath:
-        if "site-packages" in one:
+        if one.endswith("site-packages"):
             location1Prefx=one
             # print(location1Prefx)
+
+    # if "core" in location1Prefx:
+    #     location1=location1Prefx+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
+    # else:
+    #     location1=location1Prefx+os.sep+"core"+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
     location1=location1Prefx+os.sep+"core"+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
     location=os.path.abspath(os.getcwd())+os.sep
     # print(plat)
@@ -176,7 +185,7 @@ def jmeterRun():
             time.sleep(0.1)
         tmp = os.popen('chmod -R 777 '+userPath+os.sep+"apache-jmeter-5.4.1"+os.sep).readlines()
 
-    jmxFilePath=userPath+os.sep+script_f['filename']
+    jmxFilePath=userPath+os.sep+scriptName
     # print(f'path: {jmxFilePath}')
     jmxParamList=parseJmeterXml(jmxFilePath)
 
@@ -186,7 +195,7 @@ def jmeterRun():
 
     if jmxParamList==False or jmxParamList==None:
         toast('jmx脚本没有参数,即将直接运行')
-        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+"-l "+reportDir+os.sep+"out.jtl"+" -e -o "+reportDir
+        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+"-l "+reportDir+os.sep+scriptName+getDateTime(format='%Y%m%d%H%M%S')+".jtl"+" -e -o "+reportDir
         # reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
         print(runComd)
         # tmp = os.popen(runComd).readlines()
@@ -206,14 +215,14 @@ def jmeterRun():
             elif len(one)<=2:
                 paraList.append(input(label=one[0]+": "+"No Desc", name=one[0]+str(CFacker().get_it("random_number",8)),value=one[1]))
 
-        info = input_group(script_f['filename']+": 脚本参数",paraList)
+        info = input_group(scriptName+": 脚本参数",paraList)
 
         paramStr=""
         for k, v in info.items():
             paramStr=paramStr+("-J"+k+" "+v+" ")
         # print(paramStr)
 
-        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+paramStr+"-l "+reportDir+os.sep+"out.jtl"+" -e -o "+reportDir
+        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+paramStr+"-l "+reportDir+os.sep+scriptName+getDateTime(format='%Y%m%d%H%M%S')+".jtl"+" -e -o "+reportDir
         print(runComd)
         # reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
     
