@@ -138,12 +138,12 @@ def jmeterRun():
     flag = actions('确认', ['是', '否'],
                         help_text='是否需要参数文件?')
     if flag=="是":
-        while confirm=="否":
+        while flag=="是":
             data_f = file_upload("上传脚本文件所需的数据文件",accept="*.csv",placeholder='选择csv文件')
             open(userPath+os.sep+data_f['filename'], 'wb').write(data_f['content'])
             # 简单的操作
-            confirm = actions('确认', ['是', '否'],
-                            help_text='确认文件是否上传完毕?')
+            flag = actions('确认', ['是', '否'],
+                            help_text='是否需要继续上传参数文件?')
 
     filename='apache-jmeter-5.4.1.zip'
     plat=pf.platform().split('-')[0]
