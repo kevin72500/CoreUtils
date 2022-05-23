@@ -597,7 +597,8 @@ def parseJmeterXml(filePath='/Users/oupeng/ssoHttp.jmx'):
                         tempList.append(one['#text'])
                 if len(tempList)>2:
                     # print(tempList)
-                    resList.append(tempList)
+                    if tempList not in restlist:
+                        resList.append(tempList)
             # print(resList)
         if len(resList)>0:
             return resList

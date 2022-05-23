@@ -34,14 +34,14 @@ def myapp2():
         #clear('content')
 
         put_table([
-            ['功能提速',span('高可用(主机、docker)',col=2),'自动化相关',span('数据链路检查',col=2),'测试辅助'],
+            ['功能相关',span('高可用(主机、docker)',col=2),'自动化相关',span('数据链路检查',col=2),'测试辅助'],
             [put_button("xmind转excel", onclick=lambda: uploadXmind(),scope='content'),
             put_button("混沌测试-交互式", onclick=lambda: oneCheck(),scope='content'),
             put_button("混沌测试-直输式", onclick=lambda: onePageInput(),scope='content'),
             put_button("jmeter自动化", onclick=lambda: jmeterScriptGen(),scope='content'),
             put_button("kafka操作", onclick=lambda: kafkaListener(),scope='content'),
             put_button("mqtt操作", onclick=lambda: mqttListener(),scope='content'),
-            put_button("测试数据生成",onclick=lambda: myFackData(),scope='content')]
+            put_button("测试数据",onclick=lambda: myFackData(),scope='content')]
             # put_button("运行jmeter脚本",onclick=lambda: jmeterRun(),scope='content')]
         ])
 
@@ -123,6 +123,7 @@ def jmeterRun():
         os.remove(resultFile)
 
     reportDir=userPath+os.sep+"report"
+
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
         tmp = os.popen('chmod -R 755 '+reportDir+os.sep).readlines()
@@ -153,11 +154,11 @@ def jmeterRun():
         if "site-packages" in one:
             location1Prefx=one
             # print(location1Prefx)
-    location1=location1Prefx+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
+    location1=location1Prefx+os.sep+"core"+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
     location=os.path.abspath(os.getcwd())+os.sep
     # print(plat)
     # print(location)
-    print(location1)
+    print(f"location1: {location1}")
 
     if "wind" in plat.lower():
         import time
@@ -184,15 +185,15 @@ def jmeterRun():
 
 
     if jmxParamList==False or jmxParamList==None:
-        toast('jmx脚本没有参数,即将直接运行', position='center', color='#2188ff', duration=0)
-        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+"-l out.jtl"
-        reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
+        toast('jmx脚本没有参数,即将直接运行')
+        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+"-l "+reportDir+os.sep+"out.jtl"+" -e -o "+reportDir
+        # reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
         print(runComd)
         # tmp = os.popen(runComd).readlines()
         
         put_processbar(label='运行中',name='bar',init=0.15,auto_close=True)
         tmp = os.popen(runComd).readlines()
-        os.popen(reportComd)
+        # os.popen(reportComd)
         for i in range(2, 11):
             set_processbar('bar', i / 10)
             time.sleep(0.1)
@@ -201,9 +202,9 @@ def jmeterRun():
         paraList=[]
         for one in jmxParamList:
             if len(one)==3:
-                paraList.append(input(label=one[0]+": "+one[2], name=one[0]+CFacker().get_it("random_letter"),value=one[1]))
+                paraList.append(input(label=one[0]+": "+one[2], name=one[0]+str(CFacker().get_it("random_number",8)),value=one[1]))
             elif len(one)<=2:
-                paraList.append(input(label=one[0]+": "+"No Desc", name=one[0]+CFacker().get_it("random_letter"),value=one[1]))
+                paraList.append(input(label=one[0]+": "+"No Desc", name=one[0]+str(CFacker().get_it("random_number",8)),value=one[1]))
 
         info = input_group(script_f['filename']+": 脚本参数",paraList)
 
@@ -212,21 +213,20 @@ def jmeterRun():
             paramStr=paramStr+("-J"+k+" "+v+" ")
         # print(paramStr)
 
-        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+paramStr+"-l out.jtl"
+        runComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -n -t "+jmxFilePath+" "+paramStr+"-l "+reportDir+os.sep+"out.jtl"+" -e -o "+reportDir
         print(runComd)
-        reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
+        # reportComd=userPath+os.sep+"apache-jmeter-5.4.1"+os.sep+"bin"+os.sep+"jmeter -g out.jtl -o "+reportDir
     
 
         put_processbar(label='运行中',name='bar',init=0.15,auto_close=True)
         tmp = os.popen(runComd).readlines()
-        os.popen(reportComd)
+        # os.popen(reportComd)
         for i in range(2, 11):
             set_processbar('bar', i / 10)
             time.sleep(0.1)
         put_text("\n".join(tmp))
 
     # shutil.make_archive("report", "zip",reportDir)
-    
     put_link('查看报告',url='/static/index.html',new_window=True)
 
 @use_scope('content',clear=True)
@@ -237,7 +237,7 @@ def jmeterScriptGen():
     '''
     session.set_env(title='testToolKit')
     #clear('content')
-    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台"])
+    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台","分布式部署(未开始）","docker打包部署(未开始)","标准包添加插件(未开始)"])
     if select_type=="自动化规范":
         jmeterRule()
     elif select_type=="标准包下载":
@@ -650,7 +650,7 @@ def run(portNum=8899):
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False)
+    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False,static_hash_cache=False)
     # start_server(myapp, port=portNum)
 
 
@@ -1013,7 +1013,7 @@ if __name__ == '__main__':
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False)
+    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False,static_hash_cache=False)
     # myapp2()
     # jmeterRun()
     # mqttListener()
