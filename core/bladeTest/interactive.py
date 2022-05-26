@@ -954,7 +954,7 @@ def kafkaListener():
 from functools import partial
 def filterPrint(oriStr,tarStr):
     if tarStr in oriStr:
-        put_text(oriStr)
+        put_text(getDateTime()+" "+oriStr)
 
 @use_scope('content',clear=True)
 def mqttListener():
