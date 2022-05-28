@@ -659,7 +659,7 @@ def run(portNum=8899):
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False,static_hash_cache=False)
+    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False,static_hash_cache=False,reconnect_timeout=3600)
     # start_server(myapp, port=portNum)
 
 
@@ -1022,7 +1022,7 @@ if __name__ == '__main__':
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False,static_hash_cache=False)
+    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False,static_hash_cache=False,reconnect_timeout=3600)
     # myapp2()
     # jmeterRun()
     # mqttListener()

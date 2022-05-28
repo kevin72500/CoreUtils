@@ -13,6 +13,12 @@ import re
 from xml.dom.minidom import parse
 import xmltodict
 from jsonpath import jsonpath
+import wget
+
+
+def download2Dest(url,destDir):
+    pass
+
 
 def findBy(oriStr,flag="",pattern=""):
     if flag=="json":
