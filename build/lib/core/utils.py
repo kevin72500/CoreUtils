@@ -13,6 +13,20 @@ import re
 from xml.dom.minidom import parse
 import xmltodict
 from jsonpath import jsonpath
+import wget
+
+
+def download2Dest(url,destDir,fileName):
+    try:
+        if not os.path.exists(destDir):
+            os.mkdir(destDir)
+        wget.download(url,out=destDir+os.sep+fileName)
+        return True
+    except Exception as e:
+        logger.error(e)
+        return False
+    return True
+
 
 def findBy(oriStr,flag="",pattern=""):
     if flag=="json":
@@ -619,4 +633,5 @@ if __name__=='__main__':
     # print(formatStr2Timestamp("2022-04-01 08:08:08.345"))
     # print(timeStampStr2FormatTime(1648741273123))
     # timestampsCompare(1648741273123, 1648741259023)
-    print(parseJmeterXml())
+    # print(parseJmeterXml())
+    download2Dest("https://th.bing.com/th/id/OIP.hN3O2jHxpAjx7N_J9vmBYAHaBf?w=294&h=70&c=7&r=0&o=5&pid=1.7", os.path.expanduser('~')+os.sep+"abc.png")
