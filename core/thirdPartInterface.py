@@ -1,10 +1,10 @@
 #encoding:utf-8
-#https://oapi.dingtalk.com/robot/send?access_token=e024afe8a1b7aff5896d5ba9a255f952b1da4500f246ee2b347f42d8aa847efe
+#https://oapi.dingtalk.com/robot/send?access_token=e024afe8a1b7aff5896d5ba9axxxxxxx
 import requests
 import json
 
 #钉钉告警接口，从钉钉api获取
-dingding_url="https://oapi.dingtalk.com/robot/send?access_token=e024afe8a1b7aff5896d5ba9a255f952b1da4500f246ee2b347f42d8aa847efe"
+dingding_url="https://oapi.dingtalk.com/robot/send?access_token=e024afe8a1b7aff5896d5ba9axxxxxxx"
 #钉钉告警接口，发送模板
 def message_warp(request_url="",response_message=""):
     return {
