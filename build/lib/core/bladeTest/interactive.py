@@ -12,7 +12,7 @@ import shutil
 # sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 from loguru import logger
 from pywebio.input import input, FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox,radio,actions
-from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row,put_processbar,set_processbar,put_error,put_warning,toast,put_grid,put_button,put_table,use_scope,span,clear,remove
+from pywebio.output import close_popup, output, put_file, put_html, put_image, put_markdown, put_text,popup,put_link,put_code,put_row,put_processbar,set_processbar,put_error,put_warning,toast,put_grid,put_button,put_table,use_scope,span,clear,remove,get_scope
 from pywebio import start_server,session,platform
 # from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 # from core.jmeterTool.swagger2jmeter import swagger2jmeter
@@ -31,23 +31,29 @@ from core.bladeTest.interactive_jmeter import jmeterScriptGen
 from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,myFackData
 from core.bladeTest.interactive_xmind import uploadXmind
 
-
-# @use_scope(name='main',clear=True,create_scope=True)
+def clearAndCall(func):
+    # print(get_scope())
+    clear('content')
+    # use_scope('ROOT',clear=True)
+    use_scope('main',clear=True)
+    func()
+    # clear(get_scope(-2))
+    use_scope('main',clear=True)
+@use_scope(name='main',clear=True,create_scope=True)
 def myapp2():
     try:
         session.set_env(title='testToolKit')
         
         put_table([
             ['功能相关',span('高可用(主机、docker)',col=2),'自动化相关',span('数据链路检查',col=2),'测试辅助'],
-            [put_button("xmind转excel", onclick=lambda: uploadXmind()),
-            put_button("混沌测试-交互式", onclick=lambda: oneCheck()),
-            put_button("混沌测试-直输式", onclick=lambda: onePageInput()),
-            put_button("jmeter自动化", onclick=lambda: jmeterScriptGen()),
-            put_button("kafka操作", onclick=lambda: kafkaListener()),
-            put_button("mqtt操作", onclick=lambda: mqttListener()),
-            put_button("测试数据",onclick=lambda: myFackData())]
-            # put_button("运行jmeter脚本",onclick=lambda: jmeterRun())]
-        ])
+            [put_button("xmind转excel", onclick=lambda: clearAndCall(uploadXmind)),
+            put_button("混沌测试-交互式", onclick=lambda: clearAndCall(oneCheck)),
+            put_button("混沌测试-直输式", onclick=lambda: clearAndCall(onePageInput)),
+            put_button("jmeter自动化", onclick=lambda: clearAndCall(jmeterScriptGen)),
+            put_button("kafka操作", onclick=lambda: clearAndCall(kafkaListener)),
+            put_button("mqtt操作", onclick=lambda: clearAndCall(mqttListener)),
+            put_button("测试数据",onclick=lambda: clearAndCall(myFackData))]
+        ],scope='main')
 
     except Exception as e:
         toast(e)

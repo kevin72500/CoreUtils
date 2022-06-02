@@ -23,6 +23,7 @@ from multiprocessing import Process
 import decimal,websockets,asyncio
 import json
 from functools import partial
+import getpass
 
 
 
@@ -58,11 +59,20 @@ def jmeterDownload():
     libpath=sys.path
     print(f'libpath: {libpath}')
     for one in libpath:
-        if "site-packages" in one:
+        if one.endswith("site-packages"):
             location1Prefx=one
-            # print(location1Prefx)
-    location1=location1Prefx+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
-    put_file(content=open(location1+filename,mode="rb").read(),name=filename,label="点击下载软件",)
+            print(f"location1Prefx: {location1Prefx}")
+    location1=location1Prefx+os.sep+"core"+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
+    print(f"location1: {location1}")
+    if os.path.exists(location1+filename):
+        put_file(content=open(location1+filename,mode="rb").read(),name=filename,label="点击下载软件")
+    else:
+        jmeterzip = file_upload("如果你是管理员，上传你的jmeter压缩包，注意jmeter压缩包解压后直接可以看到bin目录，多层级可能导致运行问题",accept="*.jmx",placeholder='选择jmeter zip文件')
+        scriptName="apache-jmeter-5.4.1.zip"#jmeterzip['filename']
+        # user = getpass.getuser()
+        # passwd = getpass.getpass("请输入您的密码:")
+        open(location1+scriptName, 'wb').write(jmeterzip['content'])
+
 
 @use_scope('content',clear=True)
 def jmeterRun():
