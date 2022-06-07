@@ -30,6 +30,7 @@ from core.bladeTest.interactive_blade import oneCheck,onePageInput
 from core.bladeTest.interactive_jmeter import jmeterScriptGen
 from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,myFackData
 from core.bladeTest.interactive_xmind import uploadXmind
+import pyttsx3
 
 def clearAndCall(func):
     # print(get_scope())
@@ -45,14 +46,16 @@ def myapp2():
         session.set_env(title='testToolKit')
         
         put_table([
-            ['功能相关',span('高可用(主机、docker)',col=2),'自动化相关',span('数据链路检查',col=2),'测试辅助'],
+            ['功能相关',span('高可用(主机、docker)久未维护',col=2),'自动化相关',span('数据链路检查',col=2),'测试辅助','其他'],
             [put_button("xmind转excel", onclick=lambda: clearAndCall(uploadXmind)),
             put_button("混沌测试-交互式", onclick=lambda: clearAndCall(oneCheck)),
             put_button("混沌测试-直输式", onclick=lambda: clearAndCall(onePageInput)),
             put_button("jmeter自动化", onclick=lambda: clearAndCall(jmeterScriptGen)),
             put_button("kafka操作", onclick=lambda: clearAndCall(kafkaListener)),
             put_button("mqtt操作", onclick=lambda: clearAndCall(mqttListener)),
-            put_button("测试数据",onclick=lambda: clearAndCall(myFackData))]
+            put_button("测试数据",onclick=lambda: clearAndCall(myFackData)),
+            put_button("杂项",onclick=lambda: clearAndCall(others))
+            ]
         ],scope='main')
 
     except Exception as e:
@@ -83,6 +86,56 @@ def myapp2():
 #             mqttListener()
 #     except Exception as e:
 #         put_text(e)
+
+
+def others():
+    session.set_env(title='testTools')
+    clear('content')
+
+    select_type = select("选择服务:",["播放语音","钉钉提醒测试","待定"])
+    if select_type=="播放语音":
+        userPath=os.path.expanduser('~')
+        reportDir=userPath+os.sep+"report"
+        if not os.path.exists(reportDir):
+            os.mkdir(reportDir)
+
+        voiceData=textarea('请粘贴文字到此处',rows=15)
+        print(voiceData)
+
+        # engine=pyttsx3.init()
+        # rate=engine.getProperty('rate')
+        # engine.setProperty('rate',166)
+        # volume = engine.getProperty('volume')   # 获取当前的音量 （默认值）(min=0 and max=1)
+        # #print (volume)                          # 打印当前音量（默认值）
+        # engine.setProperty('volume',1.0)    # 设置一个新的音量（0 < volume < 1）
+        # voices = engine.getProperty('voices')       # 获取当前的音色信息
+        # engine.setProperty('voice', voices[0].id)  # 改变中括号中的值,0为男性,1为女性
+        # engine.setProperty('voice','zh')             #将音色中修改音色的语句替换
+
+        
+        # engine.save_to_file(voiceData, reportDir+os.sep+"voice.mp3")
+        # engine.runAndWait()
+
+        from core.thirdPartInterface import mp3gen
+        mp3gen(voiceData,reportDir+os.sep+"voice.mp3")
+
+        libpath=sys.path
+        print(f'libpath: {libpath}')
+        for one in libpath:
+            if one.endswith("site-packages"):
+                location1Prefx=one
+                print(f"location1Prefx: {location1Prefx}")
+        mp3HtmlFileLocation=location1Prefx+os.sep+"core"+os.sep+"bladeTest"+os.sep+"templates"+os.sep+"play.html"
+
+        if os.path.exists(reportDir+os.sep+"play.html"):
+            os.remove(reportDir+os.sep+"play.html")
+        shutil.move(mp3HtmlFileLocation, reportDir)
+        put_link('点击播放语音',url='/static/play.html',new_window=True)
+
+
+
+
+
 
 
 

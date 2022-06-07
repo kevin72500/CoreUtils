@@ -25,6 +25,7 @@ python-dotenv==0.19.2
 jsonschema
 tenacity
 wget
+pyttsx3
 
 [:platform_system == "Darwin"]
 pycrypto==2.6.1
