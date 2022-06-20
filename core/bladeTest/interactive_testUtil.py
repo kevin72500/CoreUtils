@@ -268,6 +268,9 @@ def filterPrint(oriStr,tarStr):
     if tarStr in oriStr:
         put_text(getDateTime()+" "+oriStr)
 
+def noFilterPrint(oriStr):
+    put_text(getDateTime()+" "+oriStr)
+
 @use_scope('content',clear=True)
 def mqttListener():
     try:
@@ -284,9 +287,10 @@ def mqttListener():
                 input("mqtt密码", name="passwd"),
                 input("消息包含", name="filter"),
                 ])
+            # put_button(label=f"{data['host']}:{data['port']}-{data['topic']}-{data['user']}:{data['passwd']}", onclick=NormalMqttGetter().close(client))
             if data['filter']=="" or data['filter']==None:
                 NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(partial(filterPrint, tarStr=data['filter']))
-            NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(put_text)
+            NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(noFilterPrint)
         elif select_type=="自定义发送服务":
             data = input_group("mqtt信息",[
                 input("mqtt主机，必填", name="host"),

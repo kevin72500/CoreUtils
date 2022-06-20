@@ -43,6 +43,7 @@ class NormalMqttGetter(object):
         client.subscribe(self.topic, qos=self.qos)
         while self.flag==False:
             client.loop_forever()
+        
 
 
     def on_connect(self, client, userdata, flags, rc):
@@ -52,6 +53,9 @@ class NormalMqttGetter(object):
     def on_message(self, client, userdata, msg):
         strMsg=msg.payload.decode()
         userdata(strMsg)
+    
+    def close(self,client):
+        client.disconnect()
 
 
 class NormalMqttSender(object):

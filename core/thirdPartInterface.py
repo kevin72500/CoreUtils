@@ -1,14 +1,14 @@
 #encoding:utf-8
-def testDingGroupAlert(dingding_url,businessFunc):
+def testDingGroupAlert(dingding_url,businessFunc=None):
     #钉钉告警接口，从钉钉api获取
     dingding_url="https://oapi.dingtalk.com/robot/send?access_token=e024afe8a1b7aff5896d5ba9axxxxxxx"
     #钉钉告警接口，发送模板
-    def message_warp(request_url="",response_message=""):
+    def message_warp(request_url="requestUrl",response_message="responseMessage"):
         return {
             "msgtype": "markdown",
             "markdown": {
-                "title":"云启业务异常通知",
-                "text": "# 重要！！ 云启APP业务错误\n---\n## 发送请求：\n```\n"+request_url+"\n```\n## 返回消息：\n```\n"+response_message+"\n```\n"
+                "title":"业务异常通知",
+                "text": "# 重要！！ 业务错误\n---\n## 发送请求：\n```\n"+request_url+"\n```\n## 返回消息：\n```\n"+response_message+"\n```\n"
             },
         }
 

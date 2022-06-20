@@ -54,7 +54,6 @@ def jmeterRule():
 @use_scope('content',clear=True)
 def jmeterDownload():
     session.set_env(title='testToolKit')
-    # userPath=os.path.expanduser('~')
     filename='apache-jmeter-5.4.1.zip'
     libpath=sys.path
     print(f'libpath: {libpath}')
@@ -200,6 +199,43 @@ def jmeterRun():
     # shutil.make_archive("report", "zip",reportDir)
     put_link('查看报告',url='/static/index.html',new_window=True)
 
+
+@use_scope('content',clear=True)
+def jmeterDeploy():
+    session.set_env(title='testToolKit')
+    filename='apache-jmeter-5.4.1.zip'
+    libpath=sys.path
+    print(f'libpath: {libpath}')
+    for one in libpath:
+        if one.endswith("site-packages"):
+            location1Prefx=one
+            print(f"location1Prefx: {location1Prefx}")
+    location1=location1Prefx+os.sep+"core"+os.sep+"jmeterTool"+os.sep+"jmeterzip"+os.sep
+    print(f"location1: {location1}")
+    if not os.path.exists(location1+filename):
+        # put_file(content=open(location1+filename,mode="rb").read(),name=filename,label="点击下载软件")
+    # else:
+        jmeterzip = file_upload("如果你是管理员，上传你的jmeter压缩包，注意jmeter压缩包解压后直接可以看到bin目录，多层级可能导致运行问题",accept="*.jmx",placeholder='选择jmeter zip文件')
+        scriptName="apache-jmeter-5.4.1.zip"#jmeterzip['filename']
+        # user = getpass.getuser()
+        # passwd = getpass.getpass("请输入您的密码:")
+        open(location1+scriptName, 'wb').write(jmeterzip['content'])
+    
+
+
+    flag = actions('确认', ['是', '否'], help_text='是否需要参数文件?')
+    
+    if flag=="是":
+        while flag=="是":
+            data_f = file_upload("上传脚本文件所需的数据文件",accept="*.csv",placeholder='选择csv文件')
+            open(userPath+os.sep+data_f['filename'], 'wb').write(data_f['content'])
+            # 简单的操作
+            flag = actions('确认', ['是', '否'],
+                            help_text='是否需要继续上传参数文件?')
+
+
+
+
 @use_scope('content',clear=True)
 def jmeterScriptGen():
     '''
@@ -208,7 +244,7 @@ def jmeterScriptGen():
     '''
     session.set_env(title='testToolKit')
     clear('content')
-    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台","分布式部署(未开始）","docker打包部署(未开始)","标准包添加插件(未开始)"])
+    select_type = select("选择你要做的操作:",["自动化规范","标准包下载","swagger转脚本","har转脚本","自测工作台","分布式部署","docker打包部署(未开始)","标准包添加插件(未开始)"])
     if select_type=="自动化规范":
         jmeterRule()
     elif select_type=="标准包下载":
@@ -237,3 +273,5 @@ def jmeterScriptGen():
         put_file(content=open(location,mode="rb").read(),name="autoGen.jmx",label="点击下载jmeter脚本")
     elif select_type=="自测工作台":
         jmeterRun()
+    elif select_type=="分布式部署":
+        jmeterDeploy()
