@@ -92,7 +92,7 @@ def others():
     session.set_env(title='testTools')
     clear('content')
 
-    select_type = select("选择服务:",["播放语音","钉钉提醒测试","待定"])
+    select_type = select("选择服务:",["播放语音","钉钉群组提醒测试","待定"])
     if select_type=="播放语音":
         userPath=os.path.expanduser('~')
         reportDir=userPath+os.sep+"report"
@@ -101,20 +101,6 @@ def others():
 
         voiceData=textarea('请粘贴文字到此处',rows=15)
         print(voiceData)
-
-        # engine=pyttsx3.init()
-        # rate=engine.getProperty('rate')
-        # engine.setProperty('rate',166)
-        # volume = engine.getProperty('volume')   # 获取当前的音量 （默认值）(min=0 and max=1)
-        # #print (volume)                          # 打印当前音量（默认值）
-        # engine.setProperty('volume',1.0)    # 设置一个新的音量（0 < volume < 1）
-        # voices = engine.getProperty('voices')       # 获取当前的音色信息
-        # engine.setProperty('voice', voices[0].id)  # 改变中括号中的值,0为男性,1为女性
-        # engine.setProperty('voice','zh')             #将音色中修改音色的语句替换
-
-        
-        # engine.save_to_file(voiceData, reportDir+os.sep+"voice.mp3")
-        # engine.runAndWait()
 
         from core.thirdPartInterface import mp3gen
         mp3gen(voiceData,reportDir+os.sep+"voice.mp3")
@@ -131,6 +117,9 @@ def others():
             os.remove(reportDir+os.sep+"play.html")
         shutil.move(mp3HtmlFileLocation, reportDir)
         put_link('点击播放语音',url='/static/play.html',new_window=True)
+    elif select_type=="钉钉群组提醒测试":
+        from core.thirdPartInterface import testDingGroupAlert
+        put_warning("请期待")
 
 
 
@@ -164,7 +153,7 @@ if __name__ == '__main__':
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False,static_hash_cache=False,reconnect_timeout=3600)
+    start_server(myapp2, port=8899,static_dir=reportDir,cdn=False,static_hash_cache=False,reconnect_timeout=3600,max_payload_size='500M')
     # myapp2()
     # jmeterRun()
     # mqttListener()
