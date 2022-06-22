@@ -49,6 +49,12 @@ def jmeterRule():
     ```
     ## 4.如果需要查看结果，需要将请求的sampler命名格式 以名称+路径的方式存储，如：
     登录/login/index
+
+    ## 5.jemter脚本中，需要注意
+    
+    - user defined variables 组件中不要带有jmeter的自定义变量如：${__time(,)}
+    - 需要有自定义变量的时候，可以采用在jsr233 sampler中采用vars.put(name,'value')的方式进行定义，如 vars.put('mytime',${__time(,)})
+
     ''', lstrip=True).show()
 
 @use_scope('content',clear=True)

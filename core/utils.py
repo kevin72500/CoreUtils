@@ -16,6 +16,48 @@ from jsonpath import jsonpath
 import wget
 
 
+
+def email_sender(host="smtp.163.com",sender="xxx@163.com",auth_code='xxx',reciever=['xxx','xxx'],content="email content"):
+    import smtplib
+    import email
+
+    # 负责将多个对象集合起来
+    from email.mime.multipart import MIMEMultipart
+    from email.header import Header
+
+    # SMTP服务器,这里使用163邮箱
+    mail_host = host
+    # 发件人邮箱
+    mail_sender = sender
+    # 邮箱授权码,注意这里不是邮箱密码,如何获取邮箱授权码,请看本文最后教程
+    mail_license = auth_code
+    # 收件人邮箱，可以为多个收件人
+    mail_receivers = reciever
+
+    mm = MIMEMultipart('related')
+    # 邮件正文内容
+    body_content = content
+    # 构造文本,参数1：正文内容，参数2：文本格式，参数3：编码方式
+    message_text = MIMEText(body_content,"plain","utf-8")
+    # 向MIMEMultipart对象中添加文本对象
+    mm.attach(message_text)
+
+    # 创建SMTP对象
+    stp = smtplib.SMTP()
+    # 设置发件人邮箱的域名和端口，端口地址为25
+    stp.connect(mail_host, 25)  
+    # set_debuglevel(1)可以打印出和SMTP服务器交互的所有信息
+    stp.set_debuglevel(1)
+    # 登录邮箱，传递参数1：邮箱地址，参数2：邮箱授权码
+    stp.login(mail_sender,mail_license)
+    # 发送邮件，传递参数1：发件人邮箱地址，参数2：收件人邮箱地址，参数3：把邮件内容格式改为str
+    stp.sendmail(mail_sender, mail_receivers, mm.as_string())
+    print("邮件发送成功")
+    # 关闭SMTP对象
+    stp.quit()
+
+
+
 def download2Dest(url,destDir,fileName):
     try:
         if not os.path.exists(destDir):
