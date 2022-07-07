@@ -226,13 +226,14 @@ def kafkaListener():
             data = input_group("kafka连接配置",[
                 input("kafka topic，必填", name="topic"),
                 input("kafka 地址，如ip:port，必填", name="address"),
-                input("要发送的消息，必填",name="msg"),
+                # input("要发送的消息，必填",name="msg"),
+                textarea('要发送的消息，必填',rows=10,name='msg'),
                 input("发送频率（秒），非必填",name="interval",value="3"),
                 radio(label="持续发送",name="always",inline='true',options=('是','否'),value=('否'))
                 ])
             if data['always']=="否":
                 general_sender(data['topic'],data['address'],data['msg'])
-                put_text('发送完成')
+                put_text(f"{data['topic']}\n{data['address']}\n{data['msg']} \n 发送完成")
             elif data['always']=="是":
                 counter=0
                 while True:
@@ -298,12 +299,13 @@ def mqttListener():
                 input("mqtt topic，必填",name="topic"),
                 input("mqtt用户", name="user"),
                 input("mqtt密码", name="passwd"),
-                input("mqtt消息", name="msg"),
+                # input("mqtt消息", name="msg"),
+                textarea('mqtt消息，必填',rows=10,name='msg'),
                 radio(label="持续发送",name="always",inline='true',options=('是','否'),value=('否'))
                 ])
             if data['always']=="否":
                 NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(data['msg'])
-                put_text('发送完成')
+                put_text(f"{data['host']}:{data['port']}\n{data['topic']}\n{data['user']}->{data['passwd']}\n{data['msg']}\n发送完成")
             elif data['always']=="是":
                 counter=0
                 while True:
