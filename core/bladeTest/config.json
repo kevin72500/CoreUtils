@@ -30,7 +30,7 @@
         "host":"192.168.xxxx.xxx",
         "port": 22,
         "user":"root",
-        "passwd": "tslsmart",
+        "passwd": "abcsmart",
         "execCommand":"blade create cpu load --cpu-percent 80",
         "execCommandExpect": "success",
         "dockerName": "",

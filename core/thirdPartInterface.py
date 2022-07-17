@@ -33,7 +33,7 @@ def testDingGroupAlert(dingding_url,businessFunc=None):
 
     # query_url="https://xxxxxx.xxxxxx.com/xxxxxx-xxxxkit/homekit/device/query"
     # query_header={"Content-Type":"application/json","Authorization":login_token}
-    # query_data={"accessToken":login_token,"applicationId":"3f61abxxxx","channelId":"tsl_store","clientId":"0","currenTime":"16285xxxxxx","equipmentId":"","gatewayId":"50294D2246BC","userId":login_userid,"version":"1.0.0"}
+    # query_data={"accessToken":login_token,"applicationId":"3f61abxxxx","channelId":"abc_store","clientId":"0","currenTime":"16285xxxxxx","equipmentId":"","gatewayId":"50294D2246BC","userId":login_userid,"version":"1.0.0"}
     # res=client.post(url=query_url,headers=query_header,json=query_data)
 
     # result_flag=json.loads(res.text.encode('utf-8'))['success']
@@ -77,7 +77,7 @@ def voiceTest():
 
 def read_phash_07():
     words_list=[]
-    f= open('C:\\Users\\oupeng\\Documents\\001TSL-myfile\\项目\\语音转文字SDK测试\\语料.txt','r',encoding='utf-8')
+    f= open('C:\\Users\\oupeng\\Documents\\001-myfile\\项目\\语音转文字SDK测试\\语料.txt','r',encoding='utf-8')
     for one in f.readlines():
         words_list.append(one)
     logger.info(words_list)
