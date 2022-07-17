@@ -233,6 +233,8 @@ def kafkaListener():
                 ])
             if data['always']=="否":
                 general_sender(data['topic'],data['address'],data['msg'])
+                # popup(title=f"{data['topic']}\n{data['address']}\n{data['msg']} \n 发送完成")
+
                 put_text(f"{data['topic']}\n{data['address']}\n{data['msg']} \n 发送完成")
             elif data['always']=="是":
                 counter=0
@@ -245,7 +247,7 @@ def kafkaListener():
         elif select_type=="kafka持续接收消息":
             # host=session.info["server_host"]
             put_text(
-                "iotHub消息队列过滤，采用json方式，过滤虚拟设备号为：payload.virDevUid\n空间管理属性device_default_prop过滤，采用json方式，过滤虚拟设备号为payload.virDevUid\n空间管理状态device_default_state过滤，采用json方式，过滤实际设备号为payload.deviceId")
+                "json过滤如：data.deviceId")
             data = input_group("kafka连接配置", [
                 input("kafka topic，必填", name="topic",value='iotHub'),
                 input("kafka 地址，如ip:port，必填", name="address",value='192.168.125.149:9092'),
@@ -306,6 +308,7 @@ def mqttListener():
             if data['always']=="否":
                 NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(data['msg'])
                 put_text(f"{data['host']}:{data['port']}\n{data['topic']}\n{data['user']}->{data['passwd']}\n{data['msg']}\n发送完成")
+                # popup(title=f"{data['host']}:{data['port']}\n{data['topic']}\n{data['user']}->{data['passwd']}\n{data['msg']}\n发送完成")
             elif data['always']=="是":
                 counter=0
                 while True:

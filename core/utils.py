@@ -70,6 +70,48 @@ def download2Dest(url,destDir,fileName):
     return True
 
 
+class strFilter(object):
+    def __init__(self,oriStr,targetStr,flag="",pattern="",retFlag="yes"):
+        self.oriStr=oriStr
+        self.targetStr=targetStr
+        self.flag=flag
+        self.pattern=pattern
+        self.retFlag=retFlag
+    def falgValidate(self):
+        if flag=="":
+            self.filterContain()
+        elif flag=="json":
+            self.filterJson()
+        elif flag=="regx":
+            self.filterRegx()
+        else:
+            logger.error('your choose wrong flter flag')
+    def filterContain(self):
+        if self.retFlag.lower()=="no":
+            if self.targetStr in self.oriStr:
+                return True
+            else:
+                return False
+        else:
+            if self.targetStr in self.oriStr:
+                return self.oriStr
+            else:
+                return None
+    def filterJson(self):
+        if self.retFlag.lower()=="no":
+            if self.targetStr in self.oriStr:
+                return True
+            else:
+                return False
+        else:
+            if self.targetStr in self.oriStr:
+                return self.oriStr
+            else:
+                return None
+
+
+
+
 def findBy(oriStr,flag="",pattern=""):
     if flag=="json":
         if isJson(str(oriStr)):
