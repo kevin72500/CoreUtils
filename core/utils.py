@@ -713,7 +713,7 @@ def parseJmeterXml(filePath='/Users/oupeng/ssoHttp.jmx'):
 
 if __name__=='__main__':
     # print(CFacker().get_it("month"))
-    # print(swagger2jmeter("http://192.168.118.168:12812/space/v2/api-docs"))
+    # print(swagger2jmeter("http://192.168.xxx.xxx:123456/space/v2/api-docs"))
     # print(formatStr2Timestamp("2022-04-01 08:08:08.345"))
     # print(timeStampStr2FormatTime(1648741273123))
     # timestampsCompare(1648741273123, 1648741259023)

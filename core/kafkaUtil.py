@@ -523,14 +523,14 @@ if __name__ == '__main__':
 
 
     # multi_topic_listener(topicList=['testTopic'],
-    # serverAndPortList=["192.168.125.145:9092"],
+    # serverAndPortList=["192.168.xxx.xxx:9092"],
     # flagList=["regx"],
     # partternList=["abb(.*)bba"],
     # keyList=["555"])
 
 
     # multi_topic_listener(topicList=['iotHub','device_default_prop','device_default_state'],
-    # serverAndPortList=["192.168.125.145:9092","192.168.125.145:9092","192.168.125.145:9092"],
+    # serverAndPortList=["192.168.xxx.xxx:9092","192.168.xxx.145:9092","192.168.xxx.xxx:9092"],
     # flagList=["json","json","json"],
     # patternList=["payload.virDevUid","payload.virDevUid","payload.deviceId"],
     # keyList=["914959009603264531","914959009603264531","914959009603264536"])
@@ -540,7 +540,7 @@ if __name__ == '__main__':
 
 
     # kafkaFetchServer(0,None,'192.168.2.101:9092','testTopic')
-    # kafkaFetchServerWithFilter(0,None,'192.168.125.145:9092','testTopic','regx',"(\d{4}-\d{02}-\d{02})",'2022-01-04')
+    # kafkaFetchServerWithFilter(0,None,'192.168.xxx.xxx:9092','testTopic','regx',"(\d{4}-\d{02}-\d{02})",'2022-01-04')
     # kafkaFetchServerWithFilter(0, None, '192.168.2.101:9092', 'testTopic', '', "",'')
 
     # for one in continue_orderMsg('aaa','192.168.2.101:9092','',"",''):
@@ -558,8 +558,8 @@ if __name__ == '__main__':
 
 
 
-    # general_listener(topic="testTopic",serverAndPort="192.168.125.145:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
-    # general_sender(topic="testTopic",serverAndPort="192.168.125.145:9092",message='{"abc":{"bcd":"555"}}')
+    # general_listener(topic="testTopic",serverAndPort="192.168.xxx.xxx:9092",flag="regx",pattern=r"abb(.*)bba",key="555")
+    # general_sender(topic="testTopic",serverAndPort="192.168.xxx.xxx:9092",message='{"abc":{"bcd":"555"}}')
     
     # import time
     # k=kafkaOper(topic='test2',bootstrapserver='127.0.0.1:9092')

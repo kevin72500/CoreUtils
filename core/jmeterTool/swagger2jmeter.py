@@ -33,4 +33,4 @@ def swagger2jmeter(url,reportPath):
 
 if __name__=="__main__":
     pass
-    # print(swagger2jmeter("http://192.168.118.168:43323/auth/v2/api-docs"))
+    # print(swagger2jmeter("http://192.168.xxx.xxx:43323/auth/v2/api-docs"))

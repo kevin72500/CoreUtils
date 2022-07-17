@@ -250,7 +250,7 @@ def kafkaListener():
                 "json过滤如：data.deviceId")
             data = input_group("kafka连接配置", [
                 input("kafka topic，必填", name="topic",value='iotHub'),
-                input("kafka 地址，如ip:port，必填", name="address",value='192.168.125.149:9092'),
+                input("kafka 地址，如ip:port，必填", name="address",value='192.168.xxx.xxx:9092'),
                 input("过滤方式，仅支持填json或regx，非必填", name="filter",value='json'),
                 input("过滤表达式，json使用jmeshpath方式，regx采用abc(.*)bbb的方式，非必填", name="pattern",value="payload.name"),
                 input("过滤后比对关键字，过滤后的值是否等于输入的值，非必填", name="key",value="status"),
