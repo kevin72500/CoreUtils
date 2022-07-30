@@ -27,7 +27,7 @@ import json
 from functools import partial
 from core.bladeTest.interactive_blade import oneCheck,onePageInput
 from core.bladeTest.interactive_jmeter import jmeterScriptGen,jmeterRule,jmeterDownload,jmeterDeploy,jmeterRun
-from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,myFackData,kafkaSender,kafkaGeter
+from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,kafkaSender,kafkaGeter,myFackData
 from core.bladeTest.interactive_xmind import uploadXmind
 import pyttsx3
 
@@ -38,22 +38,22 @@ import pyttsx3
 #     use_scope('main',clear=True)
 
 
-def myapp3():
-    try:
-        put_table([
-            ['功能清单'],
-            ['功能相关',put_button("xmind转excel", onclick=lambda: uploadXmind())],
-            ['高可用(主机、docker)久未维护',put_button("混沌测试-交互式", onclick=lambda: oneCheck()),put_button("混沌测试-直输式", onclick=lambda: onePageInput())],
-            # put_button("xmind转excel", onclick=lambda: uploadXmind())],
-            # ['高可用(主机、docker)久未维护',put_button("混沌测试-交互式", onclick=lambda: oneCheck()),put_button("混沌测试-直输式", onclick=lambda: onePageInput())],
-            ['自动化相关',put_button("jmeter自动化", onclick=lambda: jmeterScriptGen())],
-            ['数据链路检查',put_button("kafka发送", onclick=lambda: kafkaSender()),put_button("kafka接收", onclick=lambda: kafkaGeter()),put_button("mqtt操作", onclick=lambda: mqttListener())],
-            ['测试辅助',put_button("测试数据",onclick=lambda: myFackData()),put_button("杂项",onclick=lambda: others())]
+# def myapp3():
+#     try:
+#         put_table([
+#             ['功能清单'],
+#             ['功能相关',put_button("xmind转excel", onclick=lambda: uploadXmind())],
+#             ['高可用(主机、docker)久未维护',put_button("混沌测试-交互式", onclick=lambda: oneCheck()),put_button("混沌测试-直输式", onclick=lambda: onePageInput())],
+#             # put_button("xmind转excel", onclick=lambda: uploadXmind())],
+#             # ['高可用(主机、docker)久未维护',put_button("混沌测试-交互式", onclick=lambda: oneCheck()),put_button("混沌测试-直输式", onclick=lambda: onePageInput())],
+#             ['自动化相关',put_button("jmeter自动化", onclick=lambda: jmeterScriptGen())],
+#             ['数据链路检查',put_button("kafka发送", onclick=lambda: kafkaSender()),put_button("kafka接收", onclick=lambda: kafkaGeter()),put_button("mqtt操作", onclick=lambda: mqttListener())],
+#             ['测试辅助',put_button("测试数据",onclick=lambda: myFackData()),put_button("杂项",onclick=lambda: others())]
             
-        ])
+#         ])
 
-    except Exception as e:
-        toast(e)
+#     except Exception as e:
+#         toast(e)
 
 
 
@@ -77,7 +77,7 @@ def myapp2():
 
     except Exception as e:
         # toast(e)
-        output.popup(title="error",content=put_text(e))
+        output.popup(title="error",content=output.put_text(e))
 
 # def myapp():
 #     '''
@@ -146,7 +146,7 @@ def others():
 
 
 
-def run(portNum=8899):
+def run(portNum=8999):
     '''
     running application by command
     :param portNum:
@@ -157,15 +157,12 @@ def run(portNum=8899):
     if not os.path.exists(reportDir):
         os.mkdir(reportDir)
     # shutil.rmtree(reportDir)
-    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False,static_hash_cache=False,reconnect_timeout=3600)
+    start_server(myapp2, port=portNum,static_dir=reportDir,cdn=False,static_hash_cache=False,reconnect_timeout=3600,max_payload_size='500M')
     # start_server(myapp, port=portNum)
 
 
 
-import pywebio.output as output
-import pywebio.input as inputs
-import pywebio.pin as pin
-from pywebio.session import hold
+
 
 def test():
     output.put_markdown('# 输入')

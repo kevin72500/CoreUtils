@@ -23,6 +23,7 @@ from multiprocessing import Process
 import decimal,websockets,asyncio
 import json
 from functools import partial
+
 import pywebio.output as output
 import pywebio.input as inputs
 import pywebio.pin as pin
@@ -181,12 +182,12 @@ def myFackData():
         "lexify":"替换所有问号?带有随机字母的事件"
         }
         
-        num=input("生成几组数据，默认是1组", type=NUMBER, value=1)
+        num=inputs.input("生成几组数据，默认是1组", type=NUMBER, value=1)
         # print(f'num is {num}')
-        myformat=radio(label='选择生成数据格式：支持csv,json',options=['csv','json'],value=['json'])
+        myformat=inputs.radio(label='选择生成数据格式：支持csv,json',options=['csv','json'],value=['json'])
         # print(f'format is {myformat}')
-
-        choose=checkbox(label='从下列选项中，选择你想生成的数据：',options=all_options.values())
+        
+        choose=inputs.checkbox(label='从下列选项中，选择你想生成的数据：',options=all_options.values())
         
         # put_row([input('自定义键值：'),checkbox(options=[''])])
         allDict={}
@@ -200,8 +201,10 @@ def myFackData():
         # put_text(allDict)
         
         if myformat=='json':
-            put_code(json.dumps(allDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
+            
+            output.put_code(json.dumps(allDict,cls=DecimalEncoder, indent=4,ensure_ascii=False), language='json',rows=20) 
         elif myformat=='csv':
+            
             outStr=""
             for k,v in allDict.items():
                 for vv in v.values():
@@ -209,9 +212,9 @@ def myFackData():
                     outStr=outStr+str(vv)+","
                 outStr=outStr+"\n"
                 
-            put_text(outStr) 
+            output.put_text(outStr) 
     except Exception as e:
-        toast(e)
+        output.popup(title="error",content=output.put_text(e))
         clear('content')
 
 
@@ -290,6 +293,57 @@ def filterPrint(oriStr,tarStr):
 def noFilterPrint(oriStr):
     put_text(getDateTime()+" "+oriStr)
 
+
+
+
+def mqttSender():
+    output.put_markdown("## 请输入mqtt连接信息")
+    pin.put_input(name='host',label='mqtt主机，必填')
+    pin.put_input(name='port',label='mqtt端口，必填（整数）')
+    pin.put_input(name='topic',label='mqtt topic，必填')
+    pin.put_input(name='user',label='mqtt 用户')
+    pin.put_input(name='passwd',label='mqtt 密码')
+    # pin.put_input(name='filter',label='mqtt 消息过滤字段')
+    pin.put_textarea(name='msg',label='消息',rows=10)
+    pin.put_input(name='interval',label='发送间隔',value=0)
+    def getValueAndCall():
+        host=pin.pin.host
+        port=int(pin.pin.port)
+        topic=pin.pin.topic
+        user=pin.pin.user
+        passwd=pin.pin.passwd
+        msg=pin.pin.msg
+        interval=int(pin.pin.interval)
+        # myfilter=pin.pin.filter
+        
+        if interval==0:
+            NormalMqttSender(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(msg)
+            output.toast(content=f"发送成功: {host} \n {topic} \n {msg}")
+        elif interval>0:
+            while True:
+                NormalMqttSender(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(msg)
+                output.toast(content=f"发送成功: {host} \n {topic} \n {msg}")
+                sleep(interval)
+    output.put_button(label='提交', onclick=lambda :getValueAndCall())
+
+
+def mqttGeter():
+    data = input_group("mqtt信息",[
+        inputs.input("mqtt主机，必填", name="host"),
+        inputs.input("mqtt端口，必填（整数）", name="port"),
+        inputs.input("mqtt topic，必填",name="topic"),
+        inputs.input("mqtt用户", name="user"),
+        inputs.input("mqtt密码", name="passwd"),
+        inputs.input("消息包含", name="filter"),
+                ])
+            # put_button(label=f"{data['host']}:{data['port']}-{data['topic']}-{data['user']}:{data['passwd']}", onclick=NormalMqttGetter().close(client))
+    if data['filter']=="" or data['filter']==None:
+        NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(partial(filterPrint, tarStr=data['filter']))
+    NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(noFilterPrint)
+
+
+
+
 @use_scope('content',clear=True)
 def mqttListener():
     try:
@@ -298,50 +352,19 @@ def mqttListener():
 
         select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)"])
         if select_type=="自定义接收服务":
-            data = input_group("mqtt信息",[
-                input("mqtt主机，必填", name="host"),
-                input("mqtt端口，必填（整数）", name="port"),
-                input("mqtt topic，必填",name="topic"),
-                input("mqtt用户", name="user"),
-                input("mqtt密码", name="passwd"),
-                input("消息包含", name="filter"),
-                ])
-            # put_button(label=f"{data['host']}:{data['port']}-{data['topic']}-{data['user']}:{data['passwd']}", onclick=NormalMqttGetter().close(client))
-            if data['filter']=="" or data['filter']==None:
-                NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(partial(filterPrint, tarStr=data['filter']))
-            NormalMqttGetter(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(noFilterPrint)
+            mqttGeter()
         elif select_type=="自定义发送服务":
-            data = input_group("mqtt信息",[
-                input("mqtt主机，必填", name="host"),
-                input("mqtt端口，必填（整数）", name="port"),
-                input("mqtt topic，必填",name="topic"),
-                input("mqtt用户", name="user"),
-                input("mqtt密码", name="passwd"),
-                # input("mqtt消息", name="msg"),
-                textarea('mqtt消息，必填',rows=10,name='msg'),
-                radio(label="持续发送",name="always",inline='true',options=('是','否'),value=('否'))
-                ])
-            if data['always']=="否":
-                NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(data['msg'])
-                put_text(f"{data['host']}:{data['port']}\n{data['topic']}\n{data['user']}->{data['passwd']}\n{data['msg']}\n发送完成")
-                # popup(title=f"{data['host']}:{data['port']}\n{data['topic']}\n{data['user']}->{data['passwd']}\n{data['msg']}\n发送完成")
-            elif data['always']=="是":
-                counter=0
-                while True:
-                    counter=counter+1
-                    NormalMqttSender(host=data['host'], port=int(data['port']), topic=data['topic'],user=data['user'],passwd=data['passwd']).getClient(data['msg'])
-                    put_text(f"发送{counter}次, {getDateTime()}")
-                    sleep(int(data['interval']))
+            mqttSender()
         elif select_type == "本地固定服务(待定)":
             put_text('未暴露')
         
     except Exception as e:
-        toast(e)
-        clear('content')
+        output.popup(title="error",content=put_text(e))
+        
 
 
 
 if __name__ == '__main__':
-    start_server(kafkaListener,port=8080,debug=True,cdn=False,auto_open_webbrowser=True)
+    start_server(myFackData,port=8999,debug=True,cdn=False,auto_open_webbrowser=True)
 
 

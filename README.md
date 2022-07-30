@@ -8,7 +8,7 @@ pip install khandytool
 2.Run in the code
 ```
 from core.bladeTest import interactive
-interactive.run(8899) #you can change the port if you like
+interactive.run(8999) #you can change the port if you like
 
 ```
 3.Or run in the command line 
