@@ -223,7 +223,7 @@ class RemoteRunner(object):
         '''
         '''
              url_str=http://mobile.abc.org/sfsf~post~urlparams~jsonparms~headers
-             http://http://192.168.118.168:21368/api-dev/terminus-security/account/login~post~ ~{"loginName":"$loginName","password":"$loginPass","businessCode":"terminus","loginType":"ACCOUNT","ticket":"7c9db59cdc189b5d56ba21bf20e355fcc30c0049","rightCode":"dfdf"}~{"Content-Type": "application/json;charset=UTF-8"}
+             http://http://192.168.xxx.xxx:21368/api-dev/terminus-security/account/login~post~ ~{"loginName":"$loginName","password":"$loginPass","businessCode":"terminus","loginType":"ACCOUNT","ticket":"7c9db59cdc189b5d56ba21bf20e355fcc30c0049","rightCode":"dfdf"}~{"Content-Type": "application/json;charset=UTF-8"}
             '''
         # logger.info(type(httpObj))
         # logger.info(httpObj)

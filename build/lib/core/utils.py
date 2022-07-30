@@ -70,6 +70,48 @@ def download2Dest(url,destDir,fileName):
     return True
 
 
+class strFilter(object):
+    def __init__(self,oriStr,targetStr,flag="",pattern="",retFlag="yes"):
+        self.oriStr=oriStr
+        self.targetStr=targetStr
+        self.flag=flag
+        self.pattern=pattern
+        self.retFlag=retFlag
+    def falgValidate(self):
+        if flag=="":
+            self.filterContain()
+        elif flag=="json":
+            self.filterJson()
+        elif flag=="regx":
+            self.filterRegx()
+        else:
+            logger.error('your choose wrong flter flag')
+    def filterContain(self):
+        if self.retFlag.lower()=="no":
+            if self.targetStr in self.oriStr:
+                return True
+            else:
+                return False
+        else:
+            if self.targetStr in self.oriStr:
+                return self.oriStr
+            else:
+                return None
+    def filterJson(self):
+        if self.retFlag.lower()=="no":
+            if self.targetStr in self.oriStr:
+                return True
+            else:
+                return False
+        else:
+            if self.targetStr in self.oriStr:
+                return self.oriStr
+            else:
+                return None
+
+
+
+
 def findBy(oriStr,flag="",pattern=""):
     if flag=="json":
         if isJson(str(oriStr)):
@@ -671,7 +713,7 @@ def parseJmeterXml(filePath='/Users/oupeng/ssoHttp.jmx'):
 
 if __name__=='__main__':
     # print(CFacker().get_it("month"))
-    # print(swagger2jmeter("http://192.168.118.168:12812/space/v2/api-docs"))
+    # print(swagger2jmeter("http://192.168.xxx.xxx:123456/space/v2/api-docs"))
     # print(formatStr2Timestamp("2022-04-01 08:08:08.345"))
     # print(timeStampStr2FormatTime(1648741273123))
     # timestampsCompare(1648741273123, 1648741259023)
