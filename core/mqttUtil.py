@@ -80,11 +80,20 @@ class NormalMqttSender(object):
         print("Connected with result code: " + str(rc))
 
 
+from functools import partial
+def filterPrint(oriStr,tarStr):
+    if tarStr in oriStr:
+        put_text(getDateTime()+" "+oriStr)
+
+def noFilterPrint(oriStr):
+    put_text(getDateTime()+" "+oriStr)
+
 def justPrint(str):
     print(str)
 
 if __name__=='__main__':
     NormalMqttGetter(host='127.0.0.1',port=1883,topic='fifa').getClient(justPrint)
+    # NormalMqttGetter(host='127.0.0.1',port=1883,topic='fifa').getClient(partial(filterPrint, tarStr=myfilter))
     # while True:
     #     time.sleep(1)
     #     NormalMqttSender(host='127.0.0.1', port=1883, timeout=600, topic='fifa').getClient(str(datetime.datetime.now()))

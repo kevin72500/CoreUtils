@@ -273,25 +273,20 @@ def kafkaListener():
     try:
         session.set_env(title='testTools')
         clear('content')
-        select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息"])
+        select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息","kafka消息转发"])
 
         if select_type=="kafka发送消息":
             kafkaSender()
-        
         elif select_type=="kafka持续接收消息":
             kafkaGeter()
+        elif select_type=="kafka消息转发":
+            kafkaTransfer()
     except Exception as e:
         output.popup(title="error",content=put_text(e))
         clear('content')
 
 
-from functools import partial
-def filterPrint(oriStr,tarStr):
-    if tarStr in oriStr:
-        put_text(getDateTime()+" "+oriStr)
 
-def noFilterPrint(oriStr):
-    put_text(getDateTime()+" "+oriStr)
 
 
 
@@ -350,21 +345,107 @@ def mqttListener():
         session.set_env(title='testTools')
         clear('content')
 
-        select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)"])
+        # select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)"])
+        select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)","MQTT消息转发"])
         if select_type=="自定义接收服务":
             mqttGeter()
         elif select_type=="自定义发送服务":
             mqttSender()
         elif select_type == "本地固定服务(待定)":
             put_text('未暴露')
+        elif select_type=="MQTT消息转发":
+            mqttTransfer()
         
     except Exception as e:
         output.popup(title="error",content=put_text(e))
         
+def kafkaTransfer():
+    output.put_markdown("## 请输入需要转发的kafka信息")
+    pin.put_input(name='host',label='源主机：端口')
+    pin.put_input(name='topic',label='源主题')
+    pin.put_input(name='user',label='源用户,非必填')
+    pin.put_input(name='passwd',label='源密码,非必填')
+    output.put_markdown("-----------------------------")
+    pin.put_input(name='host2',label='目的主机：端口')
+    pin.put_input(name='topic2',label='目的主题')
+    pin.put_input(name='user2',label='目的用户,非必填')
+    pin.put_input(name='passwd2',label='目的密码,非必填')
 
+    def getValueAndCall():
+        host=pin.pin.host
+        topic=pin.pin.topic
+        user=pin.pin.user
+        passwd=pin.pin.passwd
+
+        host2=pin.pin.host2
+        topic2=pin.pin.topic2
+        user2=pin.pin.user2
+        passwd2=pin.pin.passwd2
+
+        for one in continue_orderMsg(topic=topic, serverAndPort=host,flag="", pattern="", key=""):
+            for msg in one:
+                output.toast(content=msg)
+                general_sender(topic=topic2,serverAndPort=host2,message=msg)
+
+    output.put_button(label='提交', onclick=lambda :getValueAndCall())
+
+
+
+
+from functools import partial
+def filterPrint(oriStr,tarStr):
+    if tarStr in oriStr:
+        put_text(getDateTime()+" "+oriStr)
+
+def filterSender(oriStr,tarStr,origStr,destStr,host,port,user,passwd,topic):
+    if tarStr in oriStr:
+        newStr=oriStr.replace(origStr,destStr)
+        output.toast(content=newStr)
+        NormalMqttSender(host=host,port=port,user=user,passwd=passwd,topic=topic).getClient(msg=newStr)
+        
+
+def noFilterPrint(oriStr):
+    put_text(getDateTime()+" "+oriStr)
+
+def mqttTransfer():
+    output.put_markdown("## 请输入需要转发的，源MQTT信息")
+    pin.put_input(name='host',label='源主机')
+    pin.put_input(name='port',label="源端口")
+    pin.put_input(name='topic',label='源主题')
+    pin.put_input(name='user',label='源用户')
+    pin.put_input(name='passwd',label='源密码')
+    pin.put_input(name='filter',label='包含次字符串才被转发',value=None)
+    output.put_markdown("## 请输入需要转发到的，目的MQTT信息")
+    pin.put_input(name='host2',label='目的主机')
+    pin.put_input(name='port2',label="目的端口")
+    pin.put_input(name='topic2',label='目的主题')
+    pin.put_input(name='user2',label='目的用户')
+    pin.put_input(name='passwd2',label='目的密码')
+    pin.put_input(name='origStr',label='转发时查找字符串',value=None)
+    pin.put_input(name='destStr',label='转发时替换字符串',value=None)
+
+    def getValueAndCall():
+        host=pin.pin.host
+        port=int(pin.pin.port)
+        topic=pin.pin.topic
+        user=pin.pin.user
+        passwd=pin.pin.passwd
+        myfilter=pin.pin.filter
+
+        host2=pin.pin.host2
+        port2=int(pin.pin.port2)
+        topic2=pin.pin.topic2
+        user2=pin.pin.user2
+        passwd2=pin.pin.passwd2
+        myOrig=pin.pin.origStr
+        myDest=pin.pin.destStr
+
+        NormalMqttGetter(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(partial(filterSender,tarStr=myfilter,origStr=myOrig,destStr=myDest,host=host2,port=port2,user=user2,passwd=passwd2,topic=topic2))
+
+    output.put_button(label='提交', onclick=lambda :getValueAndCall())
 
 
 if __name__ == '__main__':
-    start_server(myFackData,port=8999,debug=True,cdn=False,auto_open_webbrowser=True)
+    start_server(mqttListener,port=8999,debug=True,cdn=False,auto_open_webbrowser=True)
 
 

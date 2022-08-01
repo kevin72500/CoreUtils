@@ -86,13 +86,14 @@ def kafkaListener():
     try:
         session.set_env(title='testTools')
         clear('content')
-        select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息"])
+        select_type = select("选择kafka操作:",["kafka发送消息","kafka持续接收消息","kafka消息转发"])
 
         if select_type=="kafka发送消息":
             kafkaSender()
-        
         elif select_type=="kafka持续接收消息":
             kafkaGeter()
+        elif select_type=="kafka消息转发":
+            kafkaTransfer()
 
     except Exception as e:
         output.popup(title="error",content=put_text(e))
@@ -169,13 +170,15 @@ def mqttListener():
         session.set_env(title='testTools')
         clear('content')
 
-        select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)"])
+        select_type = select("选择mqtt服务:",["自定义发送服务","自定义接收服务","本地固定服务(待定)","MQTT消息转发"])
         if select_type=="自定义接收服务":
             mqttGeter()
         elif select_type=="自定义发送服务":
             mqttSender()
         elif select_type == "本地固定服务(待定)":
             put_text('未暴露')
+        elif select_type=="MQTT消息转发":
+            mqttTransfer()
         
     except Exception as e:
         output.popup(title="error",content=put_text(e))
