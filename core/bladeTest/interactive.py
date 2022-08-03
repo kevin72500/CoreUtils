@@ -27,7 +27,7 @@ import json
 from functools import partial
 from core.bladeTest.interactive_blade import oneCheck,onePageInput
 from core.bladeTest.interactive_jmeter import jmeterScriptGen,jmeterRule,jmeterDownload,jmeterDeploy,jmeterRun
-from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,kafkaSender,kafkaGeter,myFackData
+from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,toolGeter
 from core.bladeTest.interactive_xmind import uploadXmind
 import pyttsx3
 
@@ -70,7 +70,7 @@ def myapp2():
             put_button("jmeter自动化", onclick=lambda: jmeterScriptGen()),
             put_button("kafka操作", onclick=lambda: kafkaListener()),
             put_button("mqtt操作", onclick=lambda: mqttListener()),
-            put_button("测试数据",onclick=lambda: myFackData()),
+            put_button("测试数据",onclick=lambda: toolGeter()),
             put_button("杂项",onclick=lambda: others())
             ]
         ])

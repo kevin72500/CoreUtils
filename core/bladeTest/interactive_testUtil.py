@@ -15,7 +15,7 @@ from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.jmeterTool.swagger2jmeter import swagger2jmeter
 from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
-from core.utils import CFacker,getDateTime,parseJmeterXml
+from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime
 from core.mqttUtil import NormalMqttGetter,NormalMqttSender
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
@@ -28,6 +28,41 @@ import pywebio.output as output
 import pywebio.input as inputs
 import pywebio.pin as pin
 from pywebio.session import hold
+
+
+@use_scope('content',clear=True)
+def toolGeter():
+    session.set_env(title='testToolKit')
+    clear('content')
+    select_type = select("选择你要做的操作:",["时间戳相关","数据构造"])
+    if select_type=="时间戳相关":
+        timeStampGetter()
+    elif select_type=="数据构造":
+        myFackData()
+
+
+
+def timeStampGetter():
+    output.put_markdown("# 当前时间：")
+    output.put_markdown("- "+str(getDateTime()))
+    output.put_markdown("# 当前时间戳：")
+    output.put_markdown("- "+str(getTimeStamp()))
+    output.put_markdown("## 时间转时间戳：")
+    pin.put_input(name='curTime',label='请输入格式化时间',value="请输入格式化时间：2022-01-01 23:59:59.999")
+    def time2stamp():
+        curTime=pin.pin.curTime
+        output.popup(title="时间戳为：",content=put_text(formatStr2Timestamp(curTime)))
+    output.put_button(label='确定', onclick=lambda :time2stamp())
+
+
+    output.put_markdown("## 时间戳转时间：")
+    pin.put_input(name='timeStamp',label='请输入时间戳',value="请输入13位时间戳，不够时后三位可写位0")
+    def stamp2time():
+        timeStamp=pin.pin.timeStamp
+        output.popup(title="时间为：",content=put_text(timeStampStr2FormatTime(timeStamp)))
+    output.put_button(label='确定', onclick=lambda :stamp2time())
+
+
 
 
 class DecimalEncoder(json.JSONEncoder):
