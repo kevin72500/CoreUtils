@@ -34,11 +34,21 @@ from pywebio.session import hold
 def toolGeter():
     session.set_env(title='testToolKit')
     clear('content')
-    select_type = select("选择你要做的操作:",["时间戳相关","数据构造"])
+    select_type = select("选择你要做的操作:",["时间戳相关","数据构造","json格式化验证"])
     if select_type=="时间戳相关":
         timeStampGetter()
     elif select_type=="数据构造":
         myFackData()
+    elif select_type=="json格式化验证":
+        jsonFormater()
+
+def jsonFormater():
+    output.put_markdown("## Json格式化：")
+    pin.put_textarea(name='oriJson',rows=10,help_text='请输入Json')
+    def getValue():
+        oriStr=pin.pin.oriJson
+        output.put_text(jsonPrettyOutput(oriStr))
+    output.put_button(label='格式化', onclick=lambda :getValue())
 
 
 
@@ -395,34 +405,40 @@ def mqttListener():
         output.popup(title="error",content=put_text(e))
         
 def kafkaTransfer():
-    output.put_markdown("## 请输入需要转发的kafka信息")
-    pin.put_input(name='host',label='源主机：端口')
-    pin.put_input(name='topic',label='源主题')
-    pin.put_input(name='user',label='源用户,非必填')
-    pin.put_input(name='passwd',label='源密码,非必填')
-    output.put_markdown("-----------------------------")
-    pin.put_input(name='host2',label='目的主机：端口')
-    pin.put_input(name='topic2',label='目的主题')
-    pin.put_input(name='user2',label='目的用户,非必填')
-    pin.put_input(name='passwd2',label='目的密码,非必填')
+    try:
+        output.put_markdown("## 请输入需要转发的kafka信息")
+        pin.put_input(name='host',label='源主机：端口')
+        pin.put_input(name='topic',label='源主题')
+        pin.put_input(name='user',label='源用户,非必填')
+        pin.put_input(name='passwd',label='源密码,非必填')
+        output.put_markdown("-----------------------------")
+        pin.put_input(name='host2',label='目的主机：端口')
+        pin.put_input(name='topic2',label='目的主题')
+        pin.put_input(name='user2',label='目的用户,非必填')
+        pin.put_input(name='passwd2',label='目的密码,非必填')
 
-    def getValueAndCall():
-        host=pin.pin.host
-        topic=pin.pin.topic
-        user=pin.pin.user
-        passwd=pin.pin.passwd
+        def getValueAndCall():
+            host=pin.pin.host
+            topic=pin.pin.topic
+            user=pin.pin.user
+            passwd=pin.pin.passwd
 
-        host2=pin.pin.host2
-        topic2=pin.pin.topic2
-        user2=pin.pin.user2
-        passwd2=pin.pin.passwd2
+            host2=pin.pin.host2
+            topic2=pin.pin.topic2
+            user2=pin.pin.user2
+            passwd2=pin.pin.passwd2
 
-        for one in continue_orderMsg(topic=topic, serverAndPort=host,flag="", pattern="", key=""):
-            for msg in one:
-                output.toast(content=msg)
-                general_sender(topic=topic2,serverAndPort=host2,message=msg)
+            for one in continue_orderMsg(topic=topic, serverAndPort=host,flag="", pattern="", key=""):
+                for msg in one:
+                    output.toast(content=msg)
+                    general_sender(topic=topic2,serverAndPort=host2,message=msg)
 
-    output.put_button(label='提交', onclick=lambda :getValueAndCall())
+        output.put_button(label='提交', onclick=lambda :getValueAndCall())
+    except Exception as e:
+        print(e)
+        exit()
+    finally:
+        exit()
 
 
 
@@ -443,41 +459,47 @@ def noFilterPrint(oriStr):
     put_text(getDateTime()+" "+oriStr)
 
 def mqttTransfer():
-    output.put_markdown("## 请输入需要转发的，源MQTT信息")
-    pin.put_input(name='host',label='源主机')
-    pin.put_input(name='port',label="源端口")
-    pin.put_input(name='topic',label='源主题')
-    pin.put_input(name='user',label='源用户')
-    pin.put_input(name='passwd',label='源密码')
-    pin.put_input(name='filter',label='包含次字符串才被转发',value=None)
-    output.put_markdown("## 请输入需要转发到的，目的MQTT信息")
-    pin.put_input(name='host2',label='目的主机')
-    pin.put_input(name='port2',label="目的端口")
-    pin.put_input(name='topic2',label='目的主题')
-    pin.put_input(name='user2',label='目的用户')
-    pin.put_input(name='passwd2',label='目的密码')
-    pin.put_input(name='origStr',label='转发时查找字符串',value=None)
-    pin.put_input(name='destStr',label='转发时替换字符串',value=None)
+    try:
+        output.put_markdown("## 请输入需要转发的，源MQTT信息")
+        pin.put_input(name='host',label='源主机')
+        pin.put_input(name='port',label="源端口")
+        pin.put_input(name='topic',label='源主题')
+        pin.put_input(name='user',label='源用户')
+        pin.put_input(name='passwd',label='源密码')
+        pin.put_input(name='filter',label='包含次字符串才被转发',value=None)
+        output.put_markdown("## 请输入需要转发到的，目的MQTT信息")
+        pin.put_input(name='host2',label='目的主机')
+        pin.put_input(name='port2',label="目的端口")
+        pin.put_input(name='topic2',label='目的主题')
+        pin.put_input(name='user2',label='目的用户')
+        pin.put_input(name='passwd2',label='目的密码')
+        pin.put_input(name='origStr',label='转发时查找字符串',value=None)
+        pin.put_input(name='destStr',label='转发时替换字符串',value=None)
 
-    def getValueAndCall():
-        host=pin.pin.host
-        port=int(pin.pin.port)
-        topic=pin.pin.topic
-        user=pin.pin.user
-        passwd=pin.pin.passwd
-        myfilter=pin.pin.filter
+        def getValueAndCall():
+            host=pin.pin.host
+            port=int(pin.pin.port)
+            topic=pin.pin.topic
+            user=pin.pin.user
+            passwd=pin.pin.passwd
+            myfilter=pin.pin.filter
 
-        host2=pin.pin.host2
-        port2=int(pin.pin.port2)
-        topic2=pin.pin.topic2
-        user2=pin.pin.user2
-        passwd2=pin.pin.passwd2
-        myOrig=pin.pin.origStr
-        myDest=pin.pin.destStr
+            host2=pin.pin.host2
+            port2=int(pin.pin.port2)
+            topic2=pin.pin.topic2
+            user2=pin.pin.user2
+            passwd2=pin.pin.passwd2
+            myOrig=pin.pin.origStr
+            myDest=pin.pin.destStr
 
-        NormalMqttGetter(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(partial(filterSender,tarStr=myfilter,origStr=myOrig,destStr=myDest,host=host2,port=port2,user=user2,passwd=passwd2,topic=topic2))
+            NormalMqttGetter(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(partial(filterSender,tarStr=myfilter,origStr=myOrig,destStr=myDest,host=host2,port=port2,user=user2,passwd=passwd2,topic=topic2))
 
-    output.put_button(label='提交', onclick=lambda :getValueAndCall())
+        output.put_button(label='提交', onclick=lambda :getValueAndCall())
+    except Exception as e:
+        print(e)
+        exit()
+    finally:
+        exit()
 
 
 if __name__ == '__main__':

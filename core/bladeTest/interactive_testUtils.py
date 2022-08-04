@@ -15,7 +15,7 @@ from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.jmeterTool.swagger2jmeter import swagger2jmeter
 from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
-from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime
+from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime,jsonPrettyOutput
 from core.mqttUtil import NormalMqttGetter,NormalMqttSender
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
@@ -274,12 +274,18 @@ def timeStampGetter():
     
 
 
-
+def jsonFormater():
+    output.put_markdown("## Json格式化：")
+    pin.put_textarea(name='oriJson',rows=10,help_text='请输入Json')
+    def getValue():
+        oriStr=pin.pin.oriJson
+        output.put_text(jsonPrettyOutput(oriStr))
+    output.put_button(label='格式化', onclick=lambda :getValue())
 
 
 
 
 if __name__ == '__main__':
-    start_server(timeStampGetter,port=8080,debug=True,cdn=False,auto_open_webbrowser=True)
+    start_server(jsonFormater,port=8080,debug=True,cdn=False,auto_open_webbrowser=True)
 
 

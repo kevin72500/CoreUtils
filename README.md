@@ -13,7 +13,7 @@ interactive.run(8999) #you can change the port if you like
 ```
 3.Or run in the command line 
 ```
-python -m core.bladeTest.interactive #will open 8899 port to contain the application
+python -m core.bladeTest.interactive #will open 8999 port to contain the application
 
 ```
 

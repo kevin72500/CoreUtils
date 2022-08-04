@@ -14,9 +14,61 @@ from xml.dom.minidom import parse
 import xmltodict
 from jsonpath import jsonpath
 import wget
+import traceback
+
+
+def timeit(func):
+    '''
+        func：funtion name which need calculate time
+    '''
+    @wraps(func)
+    def calculate(*args,**kwargs):
+        start=datetime.now()
+        func(*args,**kwargs)
+        end=datetime.now()
+        logger.info(f"{func.__name__} costs {(end-start).seconds}")
+        return calculate
+
+
+def addException(func):
+    @wraps(func)
+    def innerFun(*args,**kwargs):
+        try:
+            res=None
+            res=func(*args,**kwargs)
+        except Exception as e:
+            print(e)
+            print('Exception found, detail below:')
+            print(traceback.format_exc())
+        return res
+    return innerFun
+
+
+def singleton(cls):
+    instance = {}
+    @wraps(cls)
+    def get_insance(*args, **kwargs):
+        if cls not in instance:
+            instance[cls] = cls(*args, **kwargs)
+        return instance[cls]
+    return get_insance
 
 
 
+def jsonPrettyOutput(json_string):
+    try:
+        parsed_json = json.loads(json_string)
+        formatted_json = json.dumps(parsed_json, indent = 4,sort_keys=True)
+        return formatted_json
+    except Exception as e:
+        return e
+
+
+
+
+
+
+@addException
 def email_sender(host="smtp.163.com",sender="xxx@163.com",auth_code='xxx',reciever=['xxx','xxx'],content="email content"):
     import smtplib
     import email
@@ -253,28 +305,6 @@ def getDimons(mylist):
     return num
 
 
-def timeit(func):
-    '''
-        func：funtion name which need calculate time
-    '''
-    @wraps(func)
-    def calculate(*args,**kwargs):
-        start=datetime.now()
-        func(*args,**kwargs)
-        end=datetime.now()
-        logger.info(f"{func.__name__} costs {(end-start).seconds}")
-        return calculate
-
-def singleton(cls):
-    instance = {}
-
-    @wraps(cls)
-    def get_insance(*args, **kwargs):
-        if cls not in instance:
-            instance[cls] = cls(*args, **kwargs)
-        return instance[cls]
-
-    return get_insance
 
 dbInfo={}
 class mysql_exe(object):
@@ -327,7 +357,7 @@ class mysql_exe(object):
         self.conn.close()
 
 
-
+@addException
 def getSha1Password(passwdStr,key="terminus2021"):
     '''
 
@@ -338,7 +368,7 @@ def getSha1Password(passwdStr,key="terminus2021"):
     sh=hashlib.sha1(bytes(key+passwdStr,encoding='utf-8')).hexdigest()
     return sh
 
-
+@addException
 def getData(keyStr,businessData):
     '''
 
@@ -708,7 +738,6 @@ def parseJmeterXml(filePath='/Users/oupeng/ssoHttp.jmx'):
 
         
     # return paramList
-
 
 
 if __name__=='__main__':
