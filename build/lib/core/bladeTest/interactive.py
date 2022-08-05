@@ -29,6 +29,7 @@ from core.bladeTest.interactive_blade import oneCheck,onePageInput
 from core.bladeTest.interactive_jmeter import jmeterScriptGen,jmeterRule,jmeterDownload,jmeterDeploy,jmeterRun
 from core.bladeTest.interactive_testUtil import kafkaListener,mqttListener,toolGeter
 from core.bladeTest.interactive_xmind import uploadXmind
+from core.bladeTest.interactive_tslbusiness import businessProcess
 import pyttsx3
 
 # def clearAndCall(func):
@@ -71,7 +72,8 @@ def myapp2():
             put_button("kafka操作", onclick=lambda: kafkaListener()),
             put_button("mqtt操作", onclick=lambda: mqttListener()),
             put_button("测试数据",onclick=lambda: toolGeter()),
-            put_button("杂项",onclick=lambda: others())
+            put_button("杂项",onclick=lambda: others()),
+            put_button("业务相关",onclick=lambda: businessProcess())
             ]
         ])
 
