@@ -190,12 +190,12 @@ def mqttListener():
 def dataTransfer():
     pass
 def kafkaTransfer():
-    output.put_markdown("## 请输入需要转发的kafka信息")
+    output.put_markdown("## 请输入来源kafka信息")
     pin.put_input(name='host',label='源主机：端口')
     pin.put_input(name='topic',label='源主题')
     pin.put_input(name='user',label='源用户')
     pin.put_input(name='passwd',label='源密码')
-    output.put_markdown("-----------------------------")
+    output.put_markdown("请输入目的kafka信息")
     pin.put_input(name='host2',label='目的主机：端口')
     pin.put_input(name='topic2',label='目的主题')
     pin.put_input(name='user2',label='目的用户')
@@ -220,15 +220,15 @@ def kafkaTransfer():
     output.put_button(label='提交', onclick=lambda :getValueAndCall())
 
 def mqttTransfer():
-    output.put_markdown("## 请输入需要转发的kafka信息")
+    output.put_markdown("## 请输入来源MQTT信息")
     pin.put_input(name='host',label='源主机')
-    pin.put_input(name='port',lable="源端口")
+    pin.put_input(name='port',label="源端口")
     pin.put_input(name='topic',label='源主题')
     pin.put_input(name='user',label='源用户')
     pin.put_input(name='passwd',label='源密码')
-    output.put_markdown("-----------------------------")
+    output.put_markdown("## 请输入目的MQTT信息")
     pin.put_input(name='host2',label='目的主机')
-    pin.put_input(name='port',lable="目的端口")
+    pin.put_input(name='port2',label="目的端口")
     pin.put_input(name='topic2',label='目的主题')
     pin.put_input(name='user2',label='目的用户')
     pin.put_input(name='passwd2',label='目的密码')
@@ -247,29 +247,39 @@ def mqttTransfer():
         passwd2=pin.pin.passwd2
 
         NormalMqttGetter(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(partial(filterPrint, tarStr=data['filter']))
-
     output.put_button(label='提交', onclick=lambda :getValueAndCall())
 
 
 
 def timeStampGetter():
-    output.put_markdown("# 当前时间：")
-    output.put_markdown("- "+str(getDateTime()))
-    output.put_markdown("# 当前时间戳：")
-    output.put_markdown("- "+str(getTimeStamp()))
-    output.put_markdown("## 时间转时间戳：")
-    pin.put_input(name='curTime',label='请输入格式化时间',value="请输入格式化时间：2022-01-01 23:59:59.999")
+    output.set_scope('time' ,if_exist='remove')
+    output.put_markdown("# 当前时间：",scope='time')
+    output.put_text("- "+str(getDateTime()),scope='time')
+    def refreshTime():
+        output.put_text("- "+str(getDateTime()),scope='time')
+    output.put_button(label='刷新时间', onclick=lambda :refreshTime())
+
+    output.set_scope('time2',if_exist='remove')
+    output.put_markdown("# 当前时间戳：",scope='time2')
+    output.put_text("- "+str(getTimeStamp()),scope='time2')
+    def refreshTimestamp():
+        output.put_text("- "+str(getTimeStamp()),scope='time2')
+    output.put_button(label='刷新时间戳', onclick=lambda :refreshTimestamp())
+
+    output.set_scope('time3',if_exist='remove')
+    output.put_markdown("## 时间转时间戳：",scope='time3')
+    pin.put_input(name='curTime',label='请输入格式化时间',value="请输入格式化时间：2022-01-01 23:59:59.999",scope='time3')
     def time2stamp():
         curTime=pin.pin.curTime
-        output.put_text(formatStr2Timestamp(curTime))
+        output.put_text(formatStr2Timestamp(curTime),scope='time3')
     output.put_button(label='确定', onclick=lambda :time2stamp())
 
-
-    output.put_markdown("## 时间戳转时间：")
-    pin.put_input(name='timeStamp',label='请输入时间戳',value="请输入13位时间戳，不够时后三位可写位0")
+    output.set_scope('time4',if_exist='remove')
+    output.put_markdown("## 时间戳转时间：",scope='time4')
+    pin.put_input(name='timeStamp',label='请输入时间戳',value="请输入13位时间戳，不够时后三位可写位0",scope='time4')
     def stamp2time():
         timeStamp=pin.pin.timeStamp
-        output.put_text(timeStampStr2FormatTime(timeStamp))
+        output.put_text(timeStampStr2FormatTime(timeStamp),scope='time4')
     output.put_button(label='确定', onclick=lambda :stamp2time())
     
 
@@ -286,6 +296,6 @@ def jsonFormater():
 
 
 if __name__ == '__main__':
-    start_server(jsonFormater,port=8080,debug=True,cdn=False,auto_open_webbrowser=True)
+    start_server(mqttListener,port=8999,debug=True,cdn=False,auto_open_webbrowser=True)
 
 

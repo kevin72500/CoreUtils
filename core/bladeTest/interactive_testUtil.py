@@ -6,6 +6,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 from time import sleep
 import shutil
+from datetime import datetime
 
 from loguru import logger
 from pywebio.input import FLOAT,NUMBER,input_group,select, textarea,file_upload,checkbox,radio,actions
@@ -15,7 +16,7 @@ from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.jmeterTool.swagger2jmeter import swagger2jmeter
 from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
-from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime
+from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime,timeComparedBySeconds
 from core.mqttUtil import NormalMqttGetter,NormalMqttSender
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial
@@ -53,23 +54,34 @@ def jsonFormater():
 
 
 def timeStampGetter():
-    output.put_markdown("# 当前时间：")
-    output.put_markdown("- "+str(getDateTime()))
-    output.put_markdown("# 当前时间戳：")
-    output.put_markdown("- "+str(getTimeStamp()))
-    output.put_markdown("## 时间转时间戳：")
-    pin.put_input(name='curTime',label='请输入格式化时间',value="请输入格式化时间：2022-01-01 23:59:59.999")
+    output.set_scope('time' ,if_exist='remove')
+    output.put_markdown("# 当前时间：",scope='time')
+    output.put_text("- "+str(getDateTime()),scope='time')
+    def refreshTime():
+        output.put_text("- "+str(getDateTime()),scope='time')
+    output.put_button(label='刷新时间', onclick=lambda :refreshTime())
+
+    output.set_scope('time2',if_exist='remove')
+    output.put_markdown("# 当前时间戳：",scope='time2')
+    output.put_text("- "+str(getTimeStamp()),scope='time2')
+    def refreshTimestamp():
+        output.put_text("- "+str(getTimeStamp()),scope='time2')
+    output.put_button(label='刷新时间戳', onclick=lambda :refreshTimestamp())
+
+    output.set_scope('time3',if_exist='remove')
+    output.put_markdown("## 时间转时间戳：",scope='time3')
+    pin.put_input(name='curTime',label='请输入格式化时间',value="请输入格式化时间：2022-01-01 23:59:59.999",scope='time3')
     def time2stamp():
         curTime=pin.pin.curTime
-        output.popup(title="时间戳为：",content=put_text(formatStr2Timestamp(curTime)))
+        output.put_text(formatStr2Timestamp(curTime),scope='time3')
     output.put_button(label='确定', onclick=lambda :time2stamp())
 
-
-    output.put_markdown("## 时间戳转时间：")
-    pin.put_input(name='timeStamp',label='请输入时间戳',value="请输入13位时间戳，不够时后三位可写位0")
+    output.set_scope('time4',if_exist='remove')
+    output.put_markdown("## 时间戳转时间：",scope='time4')
+    pin.put_input(name='timeStamp',label='请输入时间戳',value="请输入13位时间戳，不够时后三位可写位0",scope='time4')
     def stamp2time():
         timeStamp=pin.pin.timeStamp
-        output.popup(title="时间为：",content=put_text(timeStampStr2FormatTime(timeStamp)))
+        output.put_text(timeStampStr2FormatTime(timeStamp),scope='time4')
     output.put_button(label='确定', onclick=lambda :stamp2time())
 
 
@@ -404,18 +416,20 @@ def mqttListener():
     except Exception as e:
         output.popup(title="error",content=put_text(e))
         
+@use_scope('content',clear=True)
 def kafkaTransfer():
     try:
         output.put_markdown("## 请输入需要转发的kafka信息")
-        pin.put_input(name='host',label='源主机：端口')
-        pin.put_input(name='topic',label='源主题')
+        pin.put_input(name='host',label='源主机：端口*')
+        pin.put_input(name='topic',label='源主题*')
         pin.put_input(name='user',label='源用户,非必填')
         pin.put_input(name='passwd',label='源密码,非必填')
         output.put_markdown("-----------------------------")
-        pin.put_input(name='host2',label='目的主机：端口')
-        pin.put_input(name='topic2',label='目的主题')
+        pin.put_input(name='host2',label='目的主机：端口*')
+        pin.put_input(name='topic2',label='目的主题*')
         pin.put_input(name='user2',label='目的用户,非必填')
         pin.put_input(name='passwd2',label='目的密码,非必填')
+        pin.put_input(name='sec2',label='持续转发多长时间，单位秒*')
 
         def getValueAndCall():
             host=pin.pin.host
@@ -427,11 +441,18 @@ def kafkaTransfer():
             topic2=pin.pin.topic2
             user2=pin.pin.user2
             passwd2=pin.pin.passwd2
+            sec2=int(pin.pin.sec2)
 
+            start=datetime.now()
             for one in continue_orderMsg(topic=topic, serverAndPort=host,flag="", pattern="", key=""):
                 for msg in one:
-                    output.toast(content=msg)
-                    general_sender(topic=topic2,serverAndPort=host2,message=msg)
+                    print(timeComparedBySeconds(start, datetime.now()), sec2)
+                    if timeComparedBySeconds(start, datetime.now()) < sec2:
+                        output.toast(content=msg)
+                        general_sender(topic=topic2,serverAndPort=host2,message=msg)
+                    else:
+                        exit(0)
+
 
         output.put_button(label='提交', onclick=lambda :getValueAndCall())
     except Exception as e:
@@ -454,25 +475,39 @@ def filterSender(oriStr,tarStr,origStr,destStr,host,port,user,passwd,topic):
         output.toast(content=newStr)
         NormalMqttSender(host=host,port=port,user=user,passwd=passwd,topic=topic).getClient(msg=newStr)
         
+def filterSenderWithTime(oriStr,tarStr,origStr,destStr,host,port,user,passwd,topic,time_sec):
+    # counter=0
+    start=datetime.now()
+    while timeComparedBySeconds(start, datetime.now())<time_sec:
+        if tarStr in oriStr:
+            newStr=oriStr.replace(origStr,destStr)
+            output.toast(content=newStr)
+            NormalMqttSender(host=host,port=port,user=user,passwd=passwd,topic=topic).getClient(msg=newStr)
+            time.sleep(1)
+            # counter=counter+1
+    else:
+        exit(0)
 
 def noFilterPrint(oriStr):
     put_text(getDateTime()+" "+oriStr)
 
+@use_scope('content',clear=True)
 def mqttTransfer():
     try:
         output.put_markdown("## 请输入需要转发的，源MQTT信息")
-        pin.put_input(name='host',label='源主机')
-        pin.put_input(name='port',label="源端口")
-        pin.put_input(name='topic',label='源主题')
-        pin.put_input(name='user',label='源用户')
-        pin.put_input(name='passwd',label='源密码')
+        pin.put_input(name='host',label='源主机*')
+        pin.put_input(name='port',label="源端口*")
+        pin.put_input(name='topic',label='源主题*')
+        pin.put_input(name='user',label='源用户*')
+        pin.put_input(name='passwd',label='源密码*')
         pin.put_input(name='filter',label='包含次字符串才被转发',value=None)
         output.put_markdown("## 请输入需要转发到的，目的MQTT信息")
-        pin.put_input(name='host2',label='目的主机')
-        pin.put_input(name='port2',label="目的端口")
-        pin.put_input(name='topic2',label='目的主题')
-        pin.put_input(name='user2',label='目的用户')
-        pin.put_input(name='passwd2',label='目的密码')
+        pin.put_input(name='host2',label='目的主机*')
+        pin.put_input(name='port2',label="目的端口*")
+        pin.put_input(name='topic2',label='目的主题*')
+        pin.put_input(name='user2',label='目的用户*')
+        pin.put_input(name='passwd2',label='目的密码*')
+        pin.put_input(name='sec2',label='持续转发多长时间，单位秒*')
         pin.put_input(name='origStr',label='转发时查找字符串',value=None)
         pin.put_input(name='destStr',label='转发时替换字符串',value=None)
 
@@ -489,12 +524,14 @@ def mqttTransfer():
             topic2=pin.pin.topic2
             user2=pin.pin.user2
             passwd2=pin.pin.passwd2
+            sec2=int(pin.pin.sec2)
             myOrig=pin.pin.origStr
             myDest=pin.pin.destStr
 
-            NormalMqttGetter(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(partial(filterSender,tarStr=myfilter,origStr=myOrig,destStr=myDest,host=host2,port=port2,user=user2,passwd=passwd2,topic=topic2))
+            NormalMqttGetter(host=host, port=port, topic=topic,user=user,passwd=passwd).getClient(partial(filterSenderWithTime,tarStr=myfilter,origStr=myOrig,destStr=myDest,host=host2,port=port2,user=user2,passwd=passwd2,topic=topic2,time_sec=sec2))
 
-        output.put_button(label='提交', onclick=lambda :getValueAndCall())
+        output.put_button(label='转发', onclick=lambda :getValueAndCall())
+        
     except Exception as e:
         print(e)
         exit()

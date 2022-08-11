@@ -584,7 +584,14 @@ def timestampsCompare(bigOne: int, smarllOne: int):
     return dalta.total_seconds()
 
 
-
+def timeComparedBySeconds(starter,ender):
+    '''
+    #starter=datetime.now()
+    #time.sleep(3)
+    #ender=datetime.now()
+    '''
+    num=(ender-starter).seconds
+    return num
 
 
 def getDateTime(format="%Y-%m-%d %H:%M:%S.%f"):

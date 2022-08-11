@@ -132,8 +132,8 @@ def modle2command(deviceId,modle_str):
 
 def commandGenerator():
     output.put_markdown("## 请输入设备信息和模型信息：")
-    pin.put_input(name='deviceId',label='设备信息')
-    pin.put_textarea(name='modleJson',label='模型信息',rows=10)
+    pin.put_input(name='deviceId',label='设备信息,设备id')
+    pin.put_textarea(name='modleJson',label='模型信息,物模型定义Json字符串',rows=10)
     def getValueAndCall():
         deviceId=pin.pin.deviceId
         modleJson=pin.pin.modleJson
