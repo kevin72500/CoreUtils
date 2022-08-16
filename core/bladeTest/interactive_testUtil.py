@@ -16,7 +16,7 @@ from core.bladeTest.main import RemoteRunner,generateHtmlReport,running
 from core.jmeterTool.swagger2jmeter import swagger2jmeter
 from core.jmeterTool.har2jmeter import har2jmeter
 from core.xmind2excel import makeCase
-from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime,timeComparedBySeconds
+from core.utils import CFacker,getDateTime,parseJmeterXml,getTimeStamp,getDateTime,formatStr2Timestamp,timeStampStr2FormatTime,timeComparedBySeconds,jsonPrettyOutput
 from core.mqttUtil import NormalMqttGetter,NormalMqttSender
 from core.kafkaUtil import general_sender,continue_orderMsg,general_orderMsg,general_orderMsgWithFilter,kafkaFetchServerWithFilter,kafkaFetchServer
 from functools import partial

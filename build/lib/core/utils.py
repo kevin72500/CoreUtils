@@ -564,7 +564,9 @@ def timeStampStr2FormatTime(timestamp: int, format_style='%Y-%m-%d %H:%M:%S.%f')
     # return time.strftime(format_type,time.localtime(timestampStr))
 
     timestamp = float(timestamp) / 1000
-    ret_datetime = datetime.utcfromtimestamp(timestamp).strftime(format_style)
+    # ret_datetime = datetime.utcfromtimestamp(timestamp).strftime(format_style)
+    ret_datetime = datetime.fromtimestamp(timestamp).strftime(format_style)
+    # datetime.fromtimestamp(t)
     return ret_datetime
 
 

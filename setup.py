@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="khandytool",
-    version="0.2.65",
+    version="0.2.66",
     author="Ou Peng",
     author_email="kevin72500@qq.com",
     description="khandytool, handy core in testing",
@@ -29,7 +29,8 @@ setuptools.setup(
     # },
     entry_points={
         'console_scripts': [
-            'khandytool=khandytool:core'
+            'khandytool=khandytool:core',
+            # 'khandytool=khandytool',
         ],
     },
     classifiers=[
