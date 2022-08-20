@@ -10,6 +10,13 @@ pip install khandytool
 from core.bladeTest import interactive
 interactive.run(8999) #you can change the port if you like
 
+add command line to support command quick start, you need:
+$ pip install khandytool
+run command:
+$ toolrun
+this will start some module, detail you need run toolrun -help for check
+$ toolrun --module=all
+
 ```
 3.Or run in the command line 
 ```
