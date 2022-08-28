@@ -29,6 +29,99 @@ import pywebio.output as output
 import pywebio.input as inputs
 import pywebio.pin as pin
 from pywebio.session import hold
+import  traceback
+from core.httpUtil import HttpOper
+
+
+
+def modle2command_new(modle_str):
+    try:
+        jstr=json.loads(modle_str)#rawStr2)
+        productId="".join(jsonpath.jsonpath(jstr, "$.standardFunctions[*].identifier"))
+        commands=jsonpath.jsonpath(jstr, "$.standardFunctions[*].commands[*]")
+        if not commands:
+            return ['not commands']
+        else:
+            resTotal=[]
+            for command in commands:
+                # print('--'*10)
+                function_id=command['identifier']
+                command_id=""
+                command_value=[]
+                if command['inputs']!=[] :
+                    # print(command['inputs'][0]['identifier'])
+                    command_id=command['inputs'][0]['identifier']
+                    # print(command['inputs'][0]['dataType'])
+                    command_type=command['inputs'][0]['dataType']
+                    
+                    # if command_type=='enum' or command_type=='bool':
+                    if command['inputs'][0].__contains__('specifications'):
+                        values=command['inputs'][0]['specifications']
+                        # print(values)
+                        for value in values:
+                            # print(value['value'])
+                            command_value.append(value['value'])
+                    elif command['inputs'][0].__contains__('specification'):
+                        
+                        values=command['inputs'][0]['specification']
+                        if values.__contains__('min'):
+                            # print(values['min'])
+                            minNum=int(values['min'])
+                            command_value.append(minNum-1)
+                        if values.__contains__('max'):
+                            # print(values['max'])
+                            maxNum=int(values['max'])
+                            command_value.append(maxNum+1)
+                        # if values.__contains__('digit'):
+                            # print(values['digit'])
+                        # if values.__contains__('step'):
+                            # print(values['step'])
+                        if values.__contains__('accuracy'):
+                            # print(values['accuracy'])
+                            acc=int(values['accuracy'])
+                            command_value.append(round((minNum+maxNum)/2,acc))
+                            command_value.append(round((minNum+maxNum)/2,acc+1))
+                        command_value.append((minNum+maxNum)//2)
+                # print(productId)
+                # print(function_id)
+                # print(command_id)
+                # print(command_value)
+                
+                if command_value.__len__()>0:
+                    for one in command_value:
+                        tempLine=[]
+                        tempLine.append(productId)
+                        tempLine.append(function_id)
+                        tempLine.append(command_id)
+                        tempLine.append(one)
+                        resTotal.append(tempLine)
+                else:
+                        tempLine=[]
+                        tempLine.append(productId)
+                        tempLine.append(function_id)
+                        resTotal.append(tempLine)
+            return resTotal
+    except Exception as e:
+        print(traceback.print_exc())
+
+
+
+def commandConstruct(commandList,deviceId=123):
+    totalCmds=""
+    for one in commandList:
+        if type(one)==list and one.__len__()==4:
+            commandStr=f'''{{"cmd": {{"command": "{one[1]}","function": "{one[0]}","param":{{"{one[2]}":"{one[3]}"}} }},"deviceId": "{deviceId}"}}'''
+            # return(commandStr)
+            totalCmds=totalCmds+commandStr+"\n"
+        elif type(one)==list and one.__len__()==2:
+            commandStr=f'''{{"cmd": {{"command": "{one[1]}","function": "{one[0]}"}},"deviceId": "{deviceId}"}}'''
+            # return(commandStr)
+            totalCmds=totalCmds+commandStr+"\n"
+    return totalCmds
+
+
+
+
 
 
 
@@ -37,9 +130,11 @@ from pywebio.session import hold
 def businessProcess():
     session.set_env(title='testToolKit')
     clear('content')
-    select_type = select("选择你要做的操作:",["指令生成","指令生成发送--","属性上报--","点位生成--"])
+    select_type = select("选择你要做的操作:",["指令生成","指令生成发送","属性上报--","点位生成--"])
     if select_type=="指令生成":
         commandGenerator()
+    elif select_type=="指令生成发送":
+        commandGeneratorAndSend()
 
 
 
@@ -116,15 +211,7 @@ def modle2command(deviceId,modle_str):
                 # print(function_id)
                 # print(command_id)
                 # print(command_value)
-                commandStr=f'''
-                                        {{
-                                        "cmd": {{
-                                            "command": "{function_id}",
-                                            "function": "{p_id}",
-                                            "param":{{"{command_id}":"{command_value}"}}
-                                        }},
-                                        "deviceId": "{deviceId}"
-                                        }}
+                commandStr=f'''{{"cmd": {{"command": "{function_id}","function": "{p_id}","param":{{"{command_id}":"{command_value}"}} }},"deviceId": "{deviceId}"}}
                 '''
                 totalCommand=totalCommand+commandStr+"\n"
             return totalCommand
@@ -138,10 +225,43 @@ def commandGenerator():
         deviceId=pin.pin.deviceId
         modleJson=pin.pin.modleJson
 
-        output.put_text(modle2command(deviceId, modleJson))
+        output.put_text(commandConstruct(deviceId=deviceId, commandList=modle2command_new(modleJson)))
 
     output.put_button(label='提交', onclick=lambda :getValueAndCall())
 
 
+def commandGeneratorAndSend():
+    put_text("指令信息:")
+    data = input_group("配置信息", [
+        inputs.input("设备号，必填", name="deviceId",value='123456'),
+        inputs.textarea("模型信息json，必填", name="model",value='json 字符串'),
+        inputs.input("请求地址，必填", name="url",value='http://127.0.0.1:9999/device'),
+        inputs.input("请求头，必填", name="header",value='{"Content-Type":"application/json"}'),
+    ])
+    # print(data['model'])
+    commandStr=commandConstruct(deviceId=data['deviceId'], commandList=modle2command_new(data['model']))
+    commandStrList=commandStr.split('\n')
+
+
+    for index,one in enumerate(commandStrList):
+        output.put_text(f"编号：{index}\n{one}")
+        # pin.put_input(name=str(index),value=one,label="编号："+str(index))
+
+        # def sendRequest(method,url,headerStr):
+        #     # print(f" in sendreqeust: {pin.pin.index}")
+        #     res=HttpOper().call(method, url,headers=json.loads(headerStr),data=commandStrList[index])
+        #     output.popup(title='消息结果',content=output.put_text(res.res.content.decode('utf-8')))
+
+        # sendRequest('POST', data['url'], data['header']
+        
+    pin.put_input(name="num",value="编号：",label="输入编号,发送请求：")
+    def sendRequest(num):
+        content=commandStrList[int(num)]
+        res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=content)
+        output.popup(title='请求响应信息',content=output.put_text(f"地址：\n{data['url']}\n请求头：\n{data['header']}\n请求数据：\n{content}\n响应：\n{res.res.content.decode('utf-8')}"))
+    output.put_button(label="发送", onclick=lambda: sendRequest(pin.pin.num))
+
+
 if __name__=='__main__':
     start_server(businessProcess,port=9999,debug=True,cdn=False,auto_open_webbrowser=True)
+

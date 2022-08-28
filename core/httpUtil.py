@@ -13,7 +13,7 @@ class HttpOper:
         self.exportParam={}
 
     def call(self, method, url, params=None, data=None, json=None, headers=None, **kwargs):
-        logger.info(f'url : {url}')
+        logger.info(f'url : {url} \n parma: {params} \n data: {data}  \n json: {json}  \n headers: {headers}')
         self.res=self.session.request(method, url, params=params, data=data, json=json, headers=headers,**kwargs)
         return self
 

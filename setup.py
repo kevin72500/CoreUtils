@@ -30,7 +30,8 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'khandytool=khandytool:core',
-            'toolrun=core:run'
+            'toolrun=core:run',
+            'kframe=kframe:kframe'
 
             # 'khandytool=khandytool',
         ],

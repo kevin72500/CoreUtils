@@ -17,6 +17,18 @@ import wget
 import traceback
 
 
+def mkdirAfterCheck(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    
+def mkfileAfterCheck(path,fileName):
+    mkdirAfterCheck(path)
+    if not os.path.exists(path+os.sep+fileName):
+        open(path+os.sep+fileName,'w',encoding='utf-8')
+            
+    
+
+
 def timeit(func):
     '''
         func：funtion name which need calculate time
