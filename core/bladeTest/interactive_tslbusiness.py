@@ -37,70 +37,80 @@ from core.httpUtil import HttpOper
 def modle2command_new(modle_str):
     try:
         jstr=json.loads(modle_str)#rawStr2)
-        productId="".join(jsonpath.jsonpath(jstr, "$.standardFunctions[*].identifier"))
-        commands=jsonpath.jsonpath(jstr, "$.standardFunctions[*].commands[*]")
-        if not commands:
-            return ['not commands']
-        else:
-            resTotal=[]
-            for command in commands:
-                # print('--'*10)
-                function_id=command['identifier']
-                command_id=""
-                command_value=[]
-                if command['inputs']!=[] :
-                    # print(command['inputs'][0]['identifier'])
-                    command_id=command['inputs'][0]['identifier']
-                    # print(command['inputs'][0]['dataType'])
-                    command_type=command['inputs'][0]['dataType']
-                    
-                    # if command_type=='enum' or command_type=='bool':
-                    if command['inputs'][0].__contains__('specifications'):
-                        values=command['inputs'][0]['specifications']
-                        # print(values)
-                        for value in values:
-                            # print(value['value'])
-                            command_value.append(value['value'])
-                    elif command['inputs'][0].__contains__('specification'):
-                        
-                        values=command['inputs'][0]['specification']
-                        if values.__contains__('min'):
-                            # print(values['min'])
-                            minNum=int(values['min'])
-                            command_value.append(minNum-1)
-                        if values.__contains__('max'):
-                            # print(values['max'])
-                            maxNum=int(values['max'])
-                            command_value.append(maxNum+1)
-                        # if values.__contains__('digit'):
-                            # print(values['digit'])
-                        # if values.__contains__('step'):
-                            # print(values['step'])
-                        if values.__contains__('accuracy'):
-                            # print(values['accuracy'])
-                            acc=int(values['accuracy'])
-                            command_value.append(round((minNum+maxNum)/2,acc))
-                            command_value.append(round((minNum+maxNum)/2,acc+1))
-                        command_value.append((minNum+maxNum)//2)
-                # print(productId)
-                # print(function_id)
-                # print(command_id)
-                # print(command_value)
-                
-                if command_value.__len__()>0:
-                    for one in command_value:
-                        tempLine=[]
-                        tempLine.append(productId)
-                        tempLine.append(function_id)
-                        tempLine.append(command_id)
-                        tempLine.append(one)
-                        resTotal.append(tempLine)
+        productIds=jsonpath.jsonpath(jstr, "$.standardFunctions[*].identifier")
+        allcommands=jsonpath.jsonpath(jstr, "$.standardFunctions[*].commands")
+        
+        # print(productIds)
+        # print(allcommands)
+
+        # for a,b in zip(productIds,allcommands):
+        #     print(a,b)
+
+        if productIds.__len__()>=1:
+            for productId,commands in zip(productIds,allcommands):
+                # commands=jsonpath.jsonpath(jstr, "$.standardFunctions[*].commands[*]")
+                if not commands:
+                    continue
                 else:
-                        tempLine=[]
-                        tempLine.append(productId)
-                        tempLine.append(function_id)
-                        resTotal.append(tempLine)
-            return resTotal
+                    resTotal=[]
+                    for command in commands:
+                        # print('--'*10)
+                        function_id=command['identifier']
+                        command_id=""
+                        command_value=[]
+                        if command['inputs']!=[] :
+                            # print(command['inputs'][0]['identifier'])
+                            command_id=command['inputs'][0]['identifier']
+                            # print(command['inputs'][0]['dataType'])
+                            command_type=command['inputs'][0]['dataType']
+                            
+                            # if command_type=='enum' or command_type=='bool':
+                            if command['inputs'][0].__contains__('specifications'):
+                                values=command['inputs'][0]['specifications']
+                                # print(values)
+                                for value in values:
+                                    # print(value['value'])
+                                    command_value.append(value['value'])
+                            elif command['inputs'][0].__contains__('specification'):
+                                
+                                values=command['inputs'][0]['specification']
+                                if values.__contains__('min'):
+                                    # print(values['min'])
+                                    minNum=int(values['min'])
+                                    command_value.append(minNum-1)
+                                if values.__contains__('max'):
+                                    # print(values['max'])
+                                    maxNum=int(values['max'])
+                                    command_value.append(maxNum+1)
+                                # if values.__contains__('digit'):
+                                    # print(values['digit'])
+                                # if values.__contains__('step'):
+                                    # print(values['step'])
+                                if values.__contains__('accuracy'):
+                                    # print(values['accuracy'])
+                                    acc=int(values['accuracy'])
+                                    command_value.append(round((minNum+maxNum)/2,acc))
+                                    command_value.append(round((minNum+maxNum)/2,acc+1))
+                                command_value.append((minNum+maxNum)//2)
+                        # print(productId)
+                        # print(function_id)
+                        # print(command_id)
+                        # print(command_value)
+
+                        if command_value.__len__()>0:
+                            for one in command_value:
+                                tempLine=[]
+                                tempLine.append(productId)
+                                tempLine.append(function_id)
+                                tempLine.append(command_id)
+                                tempLine.append(one)
+                                resTotal.append(tempLine)
+                        else:
+                                tempLine=[]
+                                tempLine.append(productId)
+                                tempLine.append(function_id)
+                                resTotal.append(tempLine)
+                    return resTotal
     except Exception as e:
         print(traceback.print_exc())
 
@@ -241,25 +251,40 @@ def commandGeneratorAndSend():
     # print(data['model'])
     commandStr=commandConstruct(deviceId=data['deviceId'], commandList=modle2command_new(data['model']))
     commandStrList=commandStr.split('\n')
+    print(commandStrList)
 
 
-    for index,one in enumerate(commandStrList):
-        output.put_text(f"编号：{index}\n{one}")
-        # pin.put_input(name=str(index),value=one,label="编号："+str(index))
-
-        # def sendRequest(method,url,headerStr):
-        #     # print(f" in sendreqeust: {pin.pin.index}")
-        #     res=HttpOper().call(method, url,headers=json.loads(headerStr),data=commandStrList[index])
-        #     output.popup(title='消息结果',content=output.put_text(res.res.content.decode('utf-8')))
-
-        # sendRequest('POST', data['url'], data['header']
+    # for index,one in enumerate(commandStrList):
+    #     output.put_text(f"编号：{index}\n{one}")
         
-    pin.put_input(name="num",value="编号：",label="输入编号,发送请求：")
-    def sendRequest(num):
-        content=commandStrList[int(num)]
+    # pin.put_input(name="num",value="编号：",label="输入编号,发送请求：")
+    # def sendRequest(num):
+    #     content=commandStrList[int(num)]
+    #     res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=content)
+    #     output.popup(title='请求响应信息',content=output.put_text(f"地址：\n{data['url']}\n请求头：\n{data['header']}\n请求数据：\n{content}\n响应：\n{res.res.content.decode('utf-8')}"))
+    # output.put_button(label="发送", onclick=lambda: sendRequest(pin.pin.num))
+    pin.put_select(name='name',label='选择要发送得指令',options=commandStrList)
+    def sendRequest(content):
+        content=pin.pin.name
         res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=content)
-        output.popup(title='请求响应信息',content=output.put_text(f"地址：\n{data['url']}\n请求头：\n{data['header']}\n请求数据：\n{content}\n响应：\n{res.res.content.decode('utf-8')}"))
-    output.put_button(label="发送", onclick=lambda: sendRequest(pin.pin.num))
+        res1=res.res.content.decode('utf-8')
+        output.popup(title='请求响应信息',content=output.put_text(f"地址：\n{data['url']}\n请求头：\n{data['header']}\n请求数据：\n{content}\n响应：\n{res1}"))
+    
+    output.put_button(label="单条发送", onclick=lambda: sendRequest(pin.pin.num))
+
+
+    def sendRequestAll(contentList):
+        resList=[]
+        for one in contentList:
+            res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=one)
+            res1=res.res.content.decode('utf-8')
+            resList.append(res1+"\n"+"*"*20+"\n")
+        
+        output.popup(title='请求响应集合',content=output.put_text(f"响应集合：\n{''.join(resList)}"))
+    
+    output.put_html("<h1>全部发送<h1>")
+    output.put_text("\n".join(commandStrList))
+    output.put_button(label="全部发送", onclick=lambda: sendRequestAll(commandStrList))
 
 
 if __name__=='__main__':

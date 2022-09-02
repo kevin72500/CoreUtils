@@ -25,6 +25,9 @@ jsonschema
 tenacity
 wget
 pyttsx3
+pyyaml
+xlrd
+pytest-html
 
 [:platform_system == "Darwin"]
 pycrypto==2.6.1
