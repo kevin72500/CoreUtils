@@ -133,9 +133,6 @@ def commandConstruct(commandList,deviceId=123):
 
 
 
-
-
-
 @use_scope('content',clear=True)
 def businessProcess():
     session.set_env(title='testToolKit')
@@ -234,9 +231,10 @@ def commandGenerator():
     def getValueAndCall():
         deviceId=pin.pin.deviceId
         modleJson=pin.pin.modleJson
-
-        output.put_text(commandConstruct(deviceId=deviceId, commandList=modle2command_new(modleJson)))
-
+        commandList=[]
+        for one in modleJson.split('\n'):
+            commandList=commandList+modle2command_new(str(one))
+        output.put_text(commandConstruct(deviceId=deviceId, commandList=commandList))
     output.put_button(label='提交', onclick=lambda :getValueAndCall())
 
 
@@ -249,24 +247,24 @@ def commandGeneratorAndSend():
         inputs.input("请求头，必填", name="header",value='{"Content-Type":"application/json"}'),
     ])
     # print(data['model'])
+    # 旧代码
     commandStr=commandConstruct(deviceId=data['deviceId'], commandList=modle2command_new(data['model']))
     commandStrList=commandStr.split('\n')
-    print(commandStrList)
+    #兼容多个模型,但是无法匹配设备号
+    # commandList=[]
+    # for one in data['model'].split('\n'):
+    #     commandList=commandList+modle2command_new(str(one))
+    # commandStr=commandConstruct(deviceId=data['deviceId'], commandList=commandList)
+    # commandStrList=commandStr.split('\n')
+    # print(commandStrList)
 
 
-    # for index,one in enumerate(commandStrList):
-    #     output.put_text(f"编号：{index}\n{one}")
-        
-    # pin.put_input(name="num",value="编号：",label="输入编号,发送请求：")
-    # def sendRequest(num):
-    #     content=commandStrList[int(num)]
-    #     res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=content)
-    #     output.popup(title='请求响应信息',content=output.put_text(f"地址：\n{data['url']}\n请求头：\n{data['header']}\n请求数据：\n{content}\n响应：\n{res.res.content.decode('utf-8')}"))
-    # output.put_button(label="发送", onclick=lambda: sendRequest(pin.pin.num))
-    pin.put_select(name='name',label='选择要发送得指令',options=commandStrList)
+    # pin.put_select(name='name',label='选择要发送得指令',options=commandStrList)
+    pin.put_checkbox(name='name',label='选择要发送的单条指令',options=commandStrList)
     def sendRequest(content):
         content=pin.pin.name
-        res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=content)
+        print(content)
+        res=HttpOper().call('POST', data['url'],headers=json.loads(data['header']),data=content[0])
         res1=res.res.content.decode('utf-8')
         output.popup(title='请求响应信息',content=output.put_text(f"地址：\n{data['url']}\n请求头：\n{data['header']}\n请求数据：\n{content}\n响应：\n{res1}"))
     

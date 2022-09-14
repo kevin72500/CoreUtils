@@ -14,7 +14,6 @@ from loguru import logger
 from requests import session
 from copy import deepcopy
 import csv
-logger.add('执行日志.txt',rotation="10MB",encoding='utf-8',enqueue=True)
 import pytest
 import traceback
 

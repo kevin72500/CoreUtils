@@ -2,6 +2,8 @@ import requests,os
 from loguru import logger
 from core.utils import jsonFilter,regxFilter,containFilter,findBy
 from dotenv import load_dotenv, find_dotenv
+
+
 load_dotenv(verbose=True)
 
 g_exportParam={}
@@ -13,12 +15,12 @@ class HttpOper:
         self.exportParam={}
 
     def call(self, method, url, params=None, data=None, json=None, headers=None, **kwargs):
-        logger.info(f'url : {url} \n parma: {params} \n data: {data}  \n json: {json}  \n headers: {headers}')
+        logger.info(f'url : {url} \n parma: {params} \n data: {data}  \n json: {json}  \n headers: {headers}'.encode('utf-8'))
         self.res=self.session.request(method, url, params=params, data=data, json=json, headers=headers,**kwargs)
         return self
 
     def resCheck(self,flag="",pattern="",key=""):
-        logger.info(f'oriStr : {self.res.text}')
+        logger.info(f'oriStr : {self.res.text}'.encode('utf-8'))
         if self.res:
             if flag=='json':
                 if not jsonFilter(self.res.text, flag, pattern, key)[0]:
@@ -33,15 +35,15 @@ class HttpOper:
                     return False
                 return True
         else:
-            logger.error('please run call() first')
+            logger.error('please run call() first'.encode('utf-8'))
 
     def setExportParam(self,paramName,flag="",pattern=""):
-        logger.info(f'oriStr is: {self.res.text}')
+        logger.info(f'oriStr is: {self.res.text}'.encode('utf-8'))
         temp=findBy(self.res.text,flag=flag,pattern=pattern)
         if temp!=False:
             self.exportParam[paramName]=temp
         else:
-            logger.warning(f'can not set exportParm by pattern {pattern}')
+            logger.warning(f'can not set exportParm by pattern {pattern}'.encode('utf-8'))
         return self
 
     def getRes(self):
