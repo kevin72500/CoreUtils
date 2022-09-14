@@ -17,8 +17,9 @@ optionDict={
 
 @click.command()
 @click.option('--module',default='bp',help='default run business module, other option is all,bp,jmeter,kafka,mqtt,xmind,tool',type=click.Choice(['bp','jmeter','kafka','mqtt','xmind','tool','all']))
-def command_run(module):
-    start_server(eval(optionDict[module]),port=8999,debug=True,cdn=False,static_hash_cache=False,reconnect_timeout=3600,max_payload_size='500M')
+@click.option('--port',default=8999)
+def command_run(module,port):
+    start_server(eval(optionDict[module]),port=port,debug=True,cdn=False,static_hash_cache=False,reconnect_timeout=3600,max_payload_size='500M')
 
 # if __name__=="__main__":
 #     command_run()
