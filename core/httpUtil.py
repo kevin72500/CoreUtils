@@ -15,12 +15,12 @@ class HttpOper:
         self.exportParam={}
 
     def call(self, method, url, params=None, data=None, json=None, headers=None, **kwargs):
-        logger.info(f'url : {url} \n parma: {params} \n data: {data}  \n json: {json}  \n headers: {headers}'.encode('utf-8'))
+        logger.info(f'url : {url}, parma: {params}, data: {data}, json: {json}, headers: {headers}')
         self.res=self.session.request(method, url, params=params, data=data, json=json, headers=headers,**kwargs)
         return self
 
     def resCheck(self,flag="",pattern="",key=""):
-        logger.info(f'oriStr : {self.res.text}'.encode('utf-8'))
+        logger.info(f'oriStr : {self.res.text}')
         if self.res:
             if flag=='json':
                 if not jsonFilter(self.res.text, flag, pattern, key)[0]:
@@ -35,19 +35,43 @@ class HttpOper:
                     return False
                 return True
         else:
-            logger.error('please run call() first'.encode('utf-8'))
+            logger.error('please run call() first')
+
+    def resGet(self,flag="",pattern="",key=""):
+        logger.info(f'oriStr : {self.res.text}')
+        if self.res:
+            if flag=='json':
+                if not jsonFilter(self.res.text, flag, pattern, key)[0]:
+                    return False
+                return jsonFilter(self.res.text, flag, pattern, key)[1]
+            if flag=="regx":
+                if not regxFilter(self.res.text, flag, pattern, key)[0]:
+                    return False
+                return regxFilter(self.res.text, flag, pattern, key)[1]
+            if flag=="contain":
+                if not containFilter(self.res.text, key)[0]:
+                    return False
+                return containFilter(self.res.text, key)[1]
+        else:
+            logger.error('please run call() first')
 
     def setExportParam(self,paramName,flag="",pattern=""):
-        logger.info(f'oriStr is: {self.res.text}'.encode('utf-8'))
+        logger.info(f'oriStr is: {self.res.text}')
         temp=findBy(self.res.text,flag=flag,pattern=pattern)
         if temp!=False:
             self.exportParam[paramName]=temp
         else:
-            logger.warning(f'can not set exportParm by pattern {pattern}'.encode('utf-8'))
+            logger.warning(f'can not set exportParm by pattern {pattern}')
         return self
 
-    def getRes(self):
+    def getAllRes(self):
         return self.res
+
+    def getResContent(self):
+        return self.res.text
+    
+    def getResCode(self):
+        return self.res.status_code
     
     def getExportParam(self,key):
         return self.exportParam[key]
