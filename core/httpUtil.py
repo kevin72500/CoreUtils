@@ -3,7 +3,6 @@ from loguru import logger
 from core.utils import jsonFilter,regxFilter,containFilter,findBy,getTimeStamp,timestampsCompare
 from dotenv import load_dotenv, find_dotenv
 from core.utils import addException,singleton,getTimeStamp
-from core.logConfig import log
 from abc import ABCMeta, abstractmethod
 
 load_dotenv(verbose=True)
@@ -37,7 +36,8 @@ class HttpOper():
 
         if name!=None:
             self.counter.name=name
-        self.counter.name=f"{url}"
+        else:
+            self.counter.name=f"{url}"
 
 
         startTime=getTimeStamp()
