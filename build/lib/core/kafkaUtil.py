@@ -517,7 +517,66 @@ def kafkaFetchServerWithFilter(interval=0,nums=None,serverPath='0.0.0.0:9092',to
     loop.run_forever()
 
 
+
+import time
+from kafka import KafkaConsumer
+from datetime import datetime
+
+def kafkaOneTimeGet(kafkaServers="192.168.1.1:9092",groupName="test",topic="test",timeStr=None):
+    if timeStr==None:
+        timeStr=datetime.strftime(datetime.now(), format)
+    consumer = KafkaConsumer(topic, bootstrap_servers=kafkaServers, group_id=groupName, auto_offset_reset='earliest',
+                            consumer_timeout_ms=1000, max_poll_records=100,  # 每次最大消费数量
+                            enable_auto_commit=True,  # 每过一段时间自动提交所有已消费的消息（在迭代时提交）
+                            auto_commit_interval_ms=5000)
+    consumer.poll(timeout_ms=100, max_records=100, update_offsets=True)
+    assignment = consumer.assignment()
+    # timeStr = "2022-10-28 15:22:00"
+    formatTime = time.strptime(timeStr, '%Y-%m-%d %H:%M:%S')
+    startTime = int(time.mktime(formatTime)) * 1000
+    timestampToSearch = {}
+    partitionList = []
+    for tp in assignment:
+        timestampToSearch[tp] = startTime
+        partitionList.append(tp)
+    offsets = consumer.offsets_for_times(timestampToSearch)
+    try:
+        for tp in assignment:
+            offsetAndTimestamp = offsets[tp]
+            print(offsetAndTimestamp.offset)
+            if offsetAndTimestamp is not None:
+                consumer.seek(tp, offsetAndTimestamp.offset)
+    except AttributeError as e:
+        print(f"No kafka message get {e}")
+    # finally:
+    #     consumer.close()
+
+    resList=[]
+    for msg in consumer:
+        resList.append(msg.value.decode())
+
+    consumer.close()
+
+    return resList
+
+def kafkaCheckResultMsg(kafkaConsumer,expectValue):
+    flag=False
+    retMsg=None
+    if kafkaConsumer and len(kafkaConsumer)>1:
+        for msg in kafkaConsumer:
+            if msg.value.decode()==expectValue:
+                flag=True
+                retMsg=msg.value.decode()
+    return flag,retMsg
+
+
 if __name__ == '__main__':
+    # while True:
+    for msg in kafkaOneTimeGet():
+        message = "%s:%d:%d: key=%s value=%s" % (msg.topic, msg.partition, msg.offset, msg.key, msg.value)
+        print(message)
+
+# if __name__ == '__main__':
     # multi_topic_listener(topicList=['topic','topic1','topic2'],serverAndPortList=["ip:port","ip:port","ip:port"]
     # ,patternList=["json.data.id","json.data.id","json.data.id"],keyList=["assertingData1","assertingData2","assertingData3"])
 
@@ -565,19 +624,19 @@ if __name__ == '__main__':
     # k=kafkaOper(topic='test2',bootstrapserver='127.0.0.1:9092')
     # print(k.getFromTimeStamp(1, flag="contain", pattern="", key="data"))
 
-    k=kafkaOper(topic='test0330', bootstrapserver='192.168.2.103:9092').getConsumer()
-    par, start, end=k.get_offset_time_window(begin_time='2022-03-30 22:30:00', end_time='2022-03-30 22:35:00')
-    print(par)
-    print(type(par))
-    print(start)
-    print(end)
-    # k.kafkaConnection.assign([par])
-    k.kafkaConnection.seek(par, start)
-    for msg in k.kafkaConnection:
-        if msg.offset > end:
-            break
-        else:
-            print(msg.timestamp,msg.value)
+    # k=kafkaOper(topic='test0330', bootstrapserver='192.168.2.103:9092').getConsumer()
+    # par, start, end=k.get_offset_time_window(begin_time='2022-03-30 22:30:00', end_time='2022-03-30 22:35:00')
+    # print(par)
+    # print(type(par))
+    # print(start)
+    # print(end)
+    # # k.kafkaConnection.assign([par])
+    # k.kafkaConnection.seek(par, start)
+    # for msg in k.kafkaConnection:
+    #     if msg.offset > end:
+    #         break
+    #     else:
+    #         print(msg.timestamp,msg.value)
     # while True:
     #     try:
     #         value_ans = k.kafkaConnection.poll(max_records=20).values()

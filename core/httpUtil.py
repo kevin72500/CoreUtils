@@ -1,46 +1,91 @@
 import requests,os
 from loguru import logger
-from core.utils import jsonFilter,regxFilter,containFilter,findBy
+from core.utils import jsonFilter,regxFilter,containFilter,findBy,getTimeStamp,timestampsCompare
 from dotenv import load_dotenv, find_dotenv
-
+from core.utils import addException,singleton,getTimeStamp
+from core.logConfig import log
+from abc import ABCMeta, abstractmethod
 
 load_dotenv(verbose=True)
+
+
+callLog=[]
 
 g_exportParam={}
 
 
-class HttpOper:
+class baseCounter():
+    def __init__(self):
+        self.status=None
+        self.name=None
+        self.result=None
+        self.callTime=None
+
+
+
+class HttpOper():
     def __init__(self):
         """session管理器, 后续引入登录或者token处理"""
         self.session = requests.session()
         self.res=None
         self.exportParam={}
+        self.counter=None
 
-    def call(self, method, url, params=None, data=None, json=None, headers=None, **kwargs):
-        logger.info(f'url : {url}, parma: {params}, data: {data}, json: {json}, headers: {headers}')
+    def call(self, method, url, params=None, data=None, json=None, headers=None, name=None,**kwargs):
+        logger.debug(f'url : {url}, parma: {params}, data: {data}, json: {json}, headers: {headers}')
+        self.counter=baseCounter()
+
+        if name!=None:
+            self.counter.name=name
+        self.counter.name=f"{url}"
+
+
+        startTime=getTimeStamp()
         self.res=self.session.request(method, url, params=params, data=data, json=json, headers=headers,**kwargs)
+        endTime=getTimeStamp()
+        self.counter.callTime=timestampsCompare(endTime, startTime)
+
+        if self.res.status_code==200:
+            self.counter.status='Success'
+        else:
+            self.counter.status='Failed'
+
+        self.counter.result=self.res.text
+
+        callLog.append(self.counter)
+        
         return self
 
     def resCheck(self,flag="",pattern="",key=""):
-        logger.info(f'oriStr : {self.res.text}')
+        logger.debug(f'oriStr : {self.res.text}')
         if self.res:
             if flag=='json':
                 if not jsonFilter(self.res.text, flag, pattern, key)[0]:
+                    self.failed=self.failed+1
+                    self.counter.status='Failed'
                     return False
+                self.counter.status='Success'
                 return True
             if flag=="regx":
                 if not regxFilter(self.res.text, flag, pattern, key)[0]:
+                    self.failed=self.failed+1
+                    self.counter.status='Failed'
                     return False
+                self.counter.status='Success'
                 return True
             if flag=="contain":
                 if not containFilter(self.res.text, key)[0]:
+                    self.failed=self.failed+1
+                    self.counter.status='Failed'
                     return False
+                self.counter.status='Success'
                 return True
+            callLog.append(self.counter)
         else:
             logger.error('please run call() first')
 
     def resGet(self,flag="",pattern="",key=""):
-        logger.info(f'oriStr : {self.res.text}')
+        logger.debug(f'oriStr : {self.res.text}')
         if self.res:
             if flag=='json':
                 if not jsonFilter(self.res.text, flag, pattern, key)[0]:
@@ -58,7 +103,7 @@ class HttpOper:
             logger.error('please run call() first')
 
     def setExportParam(self,paramName,flag="",pattern=""):
-        logger.info(f'oriStr is: {self.res.text}')
+        logger.debug(f'oriStr is: {self.res.text}')
         temp=findBy(self.res.text,flag=flag,pattern=pattern)
         if temp!=False:
             self.exportParam[paramName]=temp
